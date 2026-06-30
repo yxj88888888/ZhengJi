@@ -30,6 +30,12 @@ ZHENGJI_DEFAULT_BUYBACK_PRICE=1026.5
 
 打开 `/gold-api/admin` 会弹出账号密码窗口。登录后填写今日金价和回购金价，保存后首页会在几秒内刷新。
 
+## GitHub Pages 临时预览
+
+仓库包含 GitHub Pages 静态预览工作流：`.github/workflows/github-pages.yml`。
+
+GitHub Pages 只能展示静态页面，不能运行 `/gold-api/admin` 后台或保存金价。静态预览会在接口不可用时显示默认金价；需要修改金价时请使用 EdgeOne Pages 或 Koyeb 这种支持后端接口的部署。
+
 ## 本地启动
 
 ```bash

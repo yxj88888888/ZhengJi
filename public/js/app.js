@@ -4,6 +4,12 @@ let currentGold = null;
 let prevSalePrice = null;
 let prevBuybackPrice = null;
 
+const fallbackGold = {
+  sale_price: '1130.00',
+  buyback_price: '1026.50',
+  update_time: '静态预览',
+};
+
 function formatHeaderDateTime() {
   const now = new Date();
   const days = ['日', '一', '二', '三', '四', '五', '六'];
@@ -82,7 +88,10 @@ async function fetchGoldCurrent() {
       updatePriceDisplay();
     }
   } catch {
-    // silent refresh failure
+    if (!currentGold) {
+      currentGold = fallbackGold;
+      updatePriceDisplay();
+    }
   }
 }
 
