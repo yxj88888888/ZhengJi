@@ -12,10 +12,15 @@ const LAN_HOST = process.env.LAN_HOST || '192.168.1.168';
 const DATA_DIR = path.join(__dirname, 'data', 'daily');
 const REG_FILE = path.join(__dirname, 'data', 'registrations.json');
 const ORDER_FILE = path.join(__dirname, 'data', 'orders.json');
+const FIXED_PRICE_FILE = path.join(__dirname, 'data', 'fixed-price.json');
 const GOLD_PRICE_SOURCE_URL = 'https://goldcard.yunxua.com/index/index/getRealTimePrices?sid=1001';
 const YUEXIN_MARKUP = 5;
 const YUEXIN_MARKUP_START_MINUTE = 15 * 60 + 30;
 const YUEXIN_MARKUP_END_MINUTE = 20 * 60;
+const DEFAULT_FIXED_SALE_PRICE = Number(process.env.ZHENGJI_DEFAULT_SALE_PRICE || 1130);
+const DEFAULT_FIXED_BUYBACK_PRICE = Number(process.env.ZHENGJI_DEFAULT_BUYBACK_PRICE || 1026.5);
+const ADMIN_USER = process.env.ZHENGJI_ADMIN_USER || 'admin';
+const ADMIN_PASSWORD = process.env.ZHENGJI_ADMIN_PASSWORD || 'zhengji2026';
 
 // ========== 微信公众号配置 ==========
 const WECHAT_TOKEN = process.env.WECHAT_TOKEN || 'yuexin_token_2024';
@@ -39,6 +44,194 @@ function readJSON(filePath) {
 }
 function writeJSON(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+}
+
+function formatFixedPriceTime() {
+  return new Date().toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    hour12: false
+  });
+}
+
+function normalizeFixedPrice(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const sale = Number(raw.sale_price);
+  const buyback = Number(raw.buyback_price);
+  if (!Number.isFinite(sale) || !Number.isFinite(buyback) || sale <= 0 || buyback <= 0) {
+    return null;
+  }
+
+  return {
+    sale_price: sale,
+    buyback_price: buyback,
+    update_time: raw.update_time || formatFixedPriceTime()
+  };
+}
+
+function getFixedPrice() {
+  const saved = normalizeFixedPrice(readJSON(FIXED_PRICE_FILE));
+  if (saved) return saved;
+
+  return {
+    sale_price: Number.isFinite(DEFAULT_FIXED_SALE_PRICE) ? DEFAULT_FIXED_SALE_PRICE : 1130,
+    buyback_price: Number.isFinite(DEFAULT_FIXED_BUYBACK_PRICE) ? DEFAULT_FIXED_BUYBACK_PRICE : 1026.5,
+    update_time: formatFixedPriceTime()
+  };
+}
+
+function saveFixedPrice(price) {
+  const normalized = normalizeFixedPrice({
+    ...price,
+    update_time: formatFixedPriceTime()
+  });
+  if (!normalized) return null;
+  writeJSON(FIXED_PRICE_FILE, normalized);
+  return normalized;
+}
+
+function fixedPricePayload(price) {
+  return {
+    sale_price: Number(price.sale_price).toFixed(2),
+    buyback_price: Number(price.buyback_price).toFixed(2),
+    update_time: price.update_time
+  };
+}
+
+function requireGoldAdmin(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Basic ') ? header.slice(6) : '';
+  let decoded = '';
+
+  try {
+    decoded = Buffer.from(token, 'base64').toString('utf8');
+  } catch (e) { /* ignore */ }
+
+  const separatorIndex = decoded.indexOf(':');
+  const user = separatorIndex >= 0 ? decoded.slice(0, separatorIndex) : '';
+  const password = separatorIndex >= 0 ? decoded.slice(separatorIndex + 1) : '';
+
+  if (user === ADMIN_USER && password === ADMIN_PASSWORD) {
+    next();
+    return;
+  }
+
+  res.set('WWW-Authenticate', 'Basic realm="ZhengJi Gold Admin", charset="UTF-8"');
+  res.status(401).type('html').send('需要账号密码');
+}
+
+function buildGoldAdminPage() {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>西部郑记金价修改</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #0f1117;
+    color: #e8e8ed;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  main {
+    width: min(92vw, 460px);
+    padding: 28px;
+    border: 1px solid rgba(212, 165, 55, 0.34);
+    border-radius: 12px;
+    background: #1a1d2e;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  }
+  h1 { margin: 0 0 18px; color: #f0d060; font-size: 24px; }
+  label { display: block; margin: 14px 0 6px; color: #b8b8c8; font-size: 14px; }
+  input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #2a2d3e;
+    border-radius: 8px;
+    background: #111522;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #d4a537;
+    color: #111;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .status { min-height: 22px; margin-top: 14px; color: #f0d060; font-size: 14px; }
+  .muted { margin-top: 14px; color: #8f94a8; font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<main>
+  <h1>西部郑记金价修改</h1>
+  <form id="price-form">
+    <label for="sale-price">今日金价（元/克）</label>
+    <input id="sale-price" name="sale_price" inputmode="decimal" required>
+    <label for="buyback-price">回购金价（元/克）</label>
+    <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
+    <button type="submit">保存金价</button>
+  </form>
+  <div class="status" id="status">正在读取当前金价...</div>
+  <div class="muted">保存后，首页固定金价会在几秒内刷新。</div>
+</main>
+<script>
+const saleInput = document.getElementById('sale-price');
+const buybackInput = document.getElementById('buyback-price');
+const statusEl = document.getElementById('status');
+
+function setStatus(text) {
+  statusEl.textContent = text;
+}
+
+async function loadPrice() {
+  const response = await fetch('/gold-api/admin/price', { credentials: 'same-origin' });
+  const json = await response.json();
+  if (json.code !== 1) throw new Error(json.message || '读取失败');
+  saleInput.value = json.data.sale_price;
+  buybackInput.value = json.data.buyback_price;
+  setStatus('当前更新时间：' + json.data.update_time);
+}
+
+document.getElementById('price-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setStatus('正在保存...');
+  const response = await fetch('/gold-api/admin/price', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sale_price: saleInput.value,
+      buyback_price: buybackInput.value,
+    }),
+  });
+  const json = await response.json();
+  if (json.code !== 1) {
+    setStatus(json.message || '保存失败');
+    return;
+  }
+  saleInput.value = json.data.sale_price;
+  buybackInput.value = json.data.buyback_price;
+  setStatus('已保存：' + json.data.update_time);
+});
+
+loadPrice().catch(error => setStatus(error.message || '读取失败'));
+</script>
+</body>
+</html>`;
 }
 
 // ========== 数据存储 ==========
@@ -589,6 +782,44 @@ app.get('/api/registrations', (req, res) => {
 });
 app.get('/api/orders', (req, res) => {
   res.json({ code: 1, data: readJSON(ORDER_FILE) });
+});
+
+app.get(['/gold-api/gold/current', '/api/fixed-gold/current'], (req, res) => {
+  res.json({ code: 1, data: fixedPricePayload(getFixedPrice()) });
+});
+
+app.get(['/gold-api/gold/history', '/api/fixed-gold/history'], (req, res) => {
+  const price = getFixedPrice();
+  res.json({
+    code: 1,
+    data: [{
+      ...fixedPricePayload(price),
+      time: price.update_time,
+      timestamp: Date.now()
+    }]
+  });
+});
+
+app.get('/gold-api/admin', requireGoldAdmin, (req, res) => {
+  res.type('html').send(buildGoldAdminPage());
+});
+
+app.get('/gold-api/admin/price', requireGoldAdmin, (req, res) => {
+  res.json({ code: 1, data: fixedPricePayload(getFixedPrice()) });
+});
+
+app.post('/gold-api/admin/price', requireGoldAdmin, (req, res) => {
+  const saved = saveFixedPrice({
+    sale_price: req.body.sale_price,
+    buyback_price: req.body.buyback_price
+  });
+
+  if (!saved) {
+    res.status(400).json({ code: 0, message: '请输入有效的今日金价和回购金价' });
+    return;
+  }
+
+  res.json({ code: 1, data: fixedPricePayload(saved) });
 });
 
 // ========== 实名登记 ==========

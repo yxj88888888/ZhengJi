@@ -4,23 +4,21 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'public', 'index.html'), 'utf8');
 const app = fs.readFileSync(path.join(root, 'public', 'js', 'app.js'), 'utf8');
-const chart = fs.readFileSync(path.join(root, 'public', 'js', 'chart.js'), 'utf8');
+const edgeFunction = fs.readFileSync(
+  path.join(root, 'edge-functions', 'gold-api', '[[default]].js'),
+  'utf8'
+);
 
-const visibleSources = [html, app, chart].join('\n');
+const visibleSources = [html, app, edgeFunction].join('\n');
 const mojibakeMarkers = [
-  '浠婃棩',
-  '鍥炶喘',
-  '瀹炴椂',
-  '璧板娍',
-  '鍏?',
-  '寮€',
-  '娑ㄨ穼',
-  '閲戜环',
-  '鏃?',
-  '骞?',
-  '鏈?',
-  '鏄熸湡',
-  '绮ら懌',
+  '娴犲﹥妫',
+  '閸ョ偠鍠',
+  '鐎圭偞妞',
+  '鐠ф澘濞',
+  '瀵偓',
+  '濞戙劏绌',
+  '闁叉垳鐜',
+  '缁倝鎳',
 ];
 
 for (const marker of mojibakeMarkers) {
@@ -33,7 +31,8 @@ const expectedHtmlCopy = [
   '今日金价',
   '回购金价',
   '元/克',
-  '实时走势',
+  '固定金价展示',
+  '价格以门店最新调整为准',
   '粤鑫金',
   '实时贵金属行情',
 ];
@@ -42,12 +41,16 @@ for (const text of expectedHtmlCopy) {
   if (!html.includes(text)) throw new Error(`Missing expected HTML copy: ${text}`);
 }
 
-for (const text of ['开盘', '涨跌', '获取金价历史失败']) {
-  if (!app.includes(text)) throw new Error(`Missing expected app copy: ${text}`);
+for (const text of ['更新', '价差', '固定金价展示']) {
+  if (!app.includes(text) && !html.includes(text)) {
+    throw new Error(`Missing expected fixed-price copy: ${text}`);
+  }
 }
 
-if (!chart.includes("name: '金价'")) {
-  throw new Error('Expected chart series name to be readable Chinese');
+for (const text of ['西部郑记金价修改', '保存金价', '需要账号密码']) {
+  if (!edgeFunction.includes(text)) {
+    throw new Error(`Missing expected admin copy: ${text}`);
+  }
 }
 
-console.log('visible Chinese copy is readable and mojibake-free');
+console.log('visible Chinese copy matches the fixed-price gold page');

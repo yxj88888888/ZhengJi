@@ -7,8 +7,12 @@ if (!html.includes('css/style.css?v=high-low-align-20260619')) {
   throw new Error('Expected stylesheet URL to be versioned so price-meta layout changes refresh in the browser');
 }
 
-if (!html.includes('js/chart.js?v=single-price-label-20260610') || !html.includes('js/app.js?v=full-day-chart-20260622')) {
+if (!html.includes('js/app.js?v=fixed-price-20260630')) {
   throw new Error('Expected local scripts to keep cache-busting versions');
+}
+
+if (html.includes('vendor/echarts.min.js') || html.includes('js/chart.js')) {
+  throw new Error('Fixed-price page should not load chart assets');
 }
 
 console.log('local assets use explicit cache-busting versions');

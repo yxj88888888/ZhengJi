@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node test/asset-versioning.test.js && node test/edgeone-function.test.js && node test/header-qr.test.js && node test/header-single-row.test.js && node test/lan-listen.test.js && node test/mobile-health-page.test.js && node test/price-flash.test.js && node test/price-meta-layout.test.js && node test/visible-copy.test.js"
   },
   "dependencies": {
     "express": "^4.18.2",

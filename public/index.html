@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>粤鑫金 - 实时贵金属行情</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="vendor/echarts.min.js?v=5.4.3"></script>
 <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css?v=high-low-align-20260619">
 </head>
@@ -71,15 +70,9 @@
       </div>
     </div>
 
-    <div class="chart-section">
-      <div class="chart-header">
-        <h2 class="chart-title">
-          <i class="fa fa-area-chart"></i> 实时走势
-        </h2>
-      </div>
-      <div class="chart-main-wrap">
-        <div class="chart-box" id="chart-gold-main"></div>
-      </div>
+    <div class="fixed-price-note">
+      <i class="fa fa-lock"></i>
+      <span>固定金价展示，价格以门店最新调整为准</span>
     </div>
   </section>
 </main>
@@ -87,8 +80,7 @@
 <span id="update-time" hidden></span>
 <span id="price-spread" hidden></span>
 <span id="record-status" hidden></span>
-<script src="js/chart.js?v=single-price-label-20260610"></script>
-<script src="js/app.js?v=full-day-chart-20260622"></script>
+<script src="js/app.js?v=fixed-price-20260630"></script>
 </body>
 </html>
 

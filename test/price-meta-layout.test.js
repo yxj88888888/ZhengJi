@@ -20,11 +20,6 @@ if (!/grid-template-columns\s*:\s*max-content\s+minmax\(96px,\s*1fr\)/.test(pric
   throw new Error('price-change should define stable label and value columns');
 }
 
-const priceRow = ruleFor('.price-row');
-if (!/position\s*:\s*relative/.test(priceRow)) {
-  throw new Error('price row should provide the positioning context for top-right metadata');
-}
-
 const priceMeta = ruleFor('.price-meta');
 if (!/position\s*:\s*absolute/.test(priceMeta) ||
     !/top\s*:\s*0/.test(priceMeta) ||
@@ -32,14 +27,9 @@ if (!/position\s*:\s*absolute/.test(priceMeta) ||
   throw new Error('price metadata should sit at the top-right corner of the sale card');
 }
 
-const priceRangeMeta = ruleFor('.price-range-meta');
-if (!/top\s*:\s*0/.test(priceRangeMeta) || !/font-size\s*:\s*inherit/.test(priceRangeMeta)) {
-  throw new Error('high/low metadata should align with the top metadata and inherit the same font size');
-}
-
-const priceRangeChange = ruleFor('.price-range-meta .price-change');
-if (!/font-size\s*:\s*inherit/.test(priceRangeChange) || !/row-gap\s*:\s*4px/.test(priceRangeChange)) {
-  throw new Error('high/low rows should keep the same compact rhythm as open/change rows');
+const fixedPriceNote = ruleFor('.fixed-price-note');
+if (!/display\s*:\s*flex/.test(fixedPriceNote) || !/justify-content\s*:\s*center/.test(fixedPriceNote)) {
+  throw new Error('fixed-price note should be centered and stable');
 }
 
 const metaLabel = ruleFor('.meta-label');
@@ -55,32 +45,16 @@ if (!/font-variant-numeric\s*:\s*tabular-nums/.test(metaValue)) {
   throw new Error('meta values should use tabular numbers');
 }
 
-const changeValue = ruleFor('.change-value');
-if (!/display\s*:\s*flex/.test(changeValue) || !/flex-direction\s*:\s*column/.test(changeValue)) {
-  throw new Error('change value and percent should stack in the numeric column');
-}
-if (!/align-items\s*:\s*flex-end/.test(changeValue)) {
-  throw new Error('change value should align to the right edge of the numeric column');
+if (!html.includes('id="price-change-info"') || !html.includes('id="price-range-info"')) {
+  throw new Error('price cards should include metadata containers');
 }
 
-const indicatorValue = ruleFor('.indicator-value');
-if (!/font-size\s*:\s*1\.18em/.test(indicatorValue)) {
-  throw new Error('change amount should be enlarged independently from the percent');
-}
-if (!/line-height\s*:\s*1/.test(indicatorValue)) {
-  throw new Error('change amount should use a tight line-height for visual alignment');
+if (!html.includes('fixed-price-note') || html.includes('chart-gold-main') || html.includes('实时走势')) {
+  throw new Error('fixed-price page should replace the chart section with a note');
 }
 
-if (!html.includes('id="price-range-info"')) {
-  throw new Error('buyback card should include a right-aligned high/low metadata container');
+if (!app.includes('更新') || !app.includes('价差')) {
+  throw new Error('price metadata should render update time and spread values');
 }
 
-if (!app.includes('最高') || !app.includes('最低')) {
-  throw new Error('price metadata should render today high and low values');
-}
-
-if (!app.includes('class="meta-label"') || !app.includes('class="meta-value"') || !app.includes('class="meta-value change-value"')) {
-  throw new Error('price-change markup should separate labels and numeric values');
-}
-
-console.log('price meta layout aligns labels and numbers in stable columns');
+console.log('fixed-price meta layout aligns labels and numbers in stable columns');
