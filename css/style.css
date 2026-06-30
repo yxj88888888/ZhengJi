@@ -337,42 +337,29 @@ body {
 .price-tick-down {
   animation: priceTickDown 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-/* ===== 鍥捐〃鍖哄煙 ===== */
-.chart-section {
-  background: var(--bg-card);
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  padding: 12px;
-}
-.chart-header {
+.fixed-price-note {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px 18px;
+  border: 1px solid rgba(212, 165, 55, 0.26);
+  border-radius: 10px;
+  background: rgba(212, 165, 55, 0.08);
+  color: var(--gold-light);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
-.chart-title {
-  font-size: 18px; font-weight: 600;
-  color: var(--text-primary);
-  display: flex; align-items: center; gap: 8px;
+.fixed-price-note i {
+  color: var(--gold-primary);
 }
-.chart-title i { color: var(--gold-primary); }
-.chart-main-wrap { margin: 0 -2px -2px; }
-.chart-box {
-  width: 100%; background: var(--bg-secondary);
-  border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);
-}
-#chart-gold-main { height: 460px; }
-#chart-macd { height: 180px; }
-#chart-volume { height: 180px; }
-.chart-sub-wrap {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-}
-
 /* ===== 鍝嶅簲寮?===== */
 @media (max-width: 1200px) {
   .price-value { font-size: 60px; }
   .price-card { padding: 18px 28px; }
   .price-label { font-size: 21px; }
-  #chart-gold-main { height: 380px; }
 }
 @media (max-width: 768px) {
   .header-inner {
@@ -452,15 +439,6 @@ body {
   }
   .price-change { font-size: 18px; gap: 6px; }
   .price-unit { font-size: 30px; }
-  .chart-section {
-    width: calc(100vw - 8px);
-    margin-left: calc(50% - 50vw + 4px);
-    margin-right: calc(50% - 50vw + 4px);
-    padding: 8px;
-  }
-  .chart-header { margin-bottom: 8px; }
-  #chart-gold-main { height: 300px; }
-  .chart-sub-wrap { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
   .header-bar { padding: 10px 8px; }
@@ -520,14 +498,6 @@ body {
   }
   .price-change { font-size: 14px; gap: 5px; }
   .price-unit { font-size: 24px; }
-  .chart-section {
-    width: calc(100vw - 4px);
-    margin-left: calc(50% - 50vw + 2px);
-    margin-right: calc(50% - 50vw + 2px);
-    padding: 6px;
-  }
-  .chart-main-wrap { margin: 0 -4px -4px; }
-  #chart-gold-main { height: 280px; }
 }
 
 /* ===== 椤甸潰鍒囨崲 ===== */
