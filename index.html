@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>粤鑫金 - 实时贵金属行情</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="vendor/echarts.min.js?v=5.4.3"></script>
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=high-low-align-20260619">
+</head>
+<body class="min-h-screen">
+
+<header class="header-bar">
+  <div class="header-inner">
+    <div class="header-qr-card" aria-label="关注粤鑫金二维码">
+      <img src="images/store-wechat-qr.jpg" alt="粤鑫金店铺微信二维码" class="header-qr-img">
+      <div class="header-qr-copy">
+        <div class="header-qr-title">关注粤鑫金</div>
+        <div class="header-qr-subtitle">了解实时行情</div>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="logo-section">
+        <div class="logo-circle">
+          <img src="images/store/logo.jpg"
+               alt="粤鑫金" class="logo-img"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+          <div class="logo-fallback" style="display:none;">粤鑫<br>金</div>
+        </div>
+        <div class="logo-text">
+          <h1 class="logo-title">粤鑫金</h1>
+          <p class="logo-subtitle">实时贵金属行情</p>
+        </div>
+      </div>
+      <div class="header-time" id="header-datetime">--</div>
+    </div>
+    <div class="header-spacer" aria-hidden="true"></div>
+  </div>
+</header>
+
+<main class="main-container" id="main-container">
+  <section class="page-section active" id="section-market">
+    <div class="price-hero">
+      <div class="price-combo-card">
+        <div class="price-card sale-card" id="sale-card">
+          <div class="price-row">
+            <div class="price-main">
+              <div class="price-label">今日金价</div>
+              <div class="price-value-wrap">
+                <span class="price-value" id="current-price">--</span>
+                <span class="price-unit">元/克</span>
+              </div>
+            </div>
+            <div class="price-meta">
+              <span class="price-change" id="price-change-info">--</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="price-card buyback-card" id="buyback-card">
+          <div class="price-label">回购金价</div>
+          <div class="price-value-wrap">
+            <span class="price-value" id="buyback-price">--</span>
+            <span class="price-unit">元/克</span>
+          </div>
+          <div class="price-meta price-range-meta">
+            <span class="price-change" id="price-range-info">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-header">
+        <h2 class="chart-title">
+          <i class="fa fa-area-chart"></i> 实时走势
+        </h2>
+      </div>
+      <div class="chart-main-wrap">
+        <div class="chart-box" id="chart-gold-main"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<span id="update-time" hidden></span>
+<span id="price-spread" hidden></span>
+<span id="record-status" hidden></span>
+<script src="js/chart.js?v=single-price-label-20260610"></script>
+<script src="js/app.js?v=full-day-chart-20260622"></script>
+</body>
+</html>
+
