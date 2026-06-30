@@ -32,17 +32,17 @@ for (const selector of ['.header-qr-card', '.header-qr-img', '.header-qr-title',
 }
 
 const qrImageRule = css.match(/\.header-qr-img\s*\{([^}]*)\}/m);
-if (!qrImageRule || !/width:\s*88px/.test(qrImageRule[1]) || !/height:\s*88px/.test(qrImageRule[1])) {
-  throw new Error('Expected enlarged 88px header QR image');
+if (!qrImageRule || !/width:\s*132px/.test(qrImageRule[1]) || !/height:\s*132px/.test(qrImageRule[1])) {
+  throw new Error('Expected 1.5x 132px header QR image');
 }
 
 const qrCardRule = css.match(/\.header-qr-card\s*\{([^}]*)\}/m);
-if (!qrCardRule || !/width:\s*242px/.test(qrCardRule[1])) {
-  throw new Error('Expected compact header QR card width');
+if (!qrCardRule || !/width:\s*363px/.test(qrCardRule[1])) {
+  throw new Error('Expected 1.5x header QR card width');
 }
 
-if (!qrCardRule || !/gap:\s*10px/.test(qrCardRule[1])) {
-  throw new Error('Expected compact gap between header QR image and copy');
+if (!qrCardRule || !/gap:\s*15px/.test(qrCardRule[1])) {
+  throw new Error('Expected 1.5x gap between header QR image and copy');
 }
 
 const qrCopyRule = css.match(/\.header-qr-copy\s*\{([^}]*)\}/m);
@@ -56,14 +56,14 @@ if (!qrCopyRule || !/flex:\s*1/.test(qrCopyRule[1]) ||
 
 const qrTitleRule = css.match(/\.header-qr-title\s*\{([^}]*)\}/m);
 const qrSubtitleRule = css.match(/\.header-qr-subtitle\s*\{([^}]*)\}/m);
-if (!qrTitleRule || !/font-size:\s*22px/.test(qrTitleRule[1])) {
-  throw new Error('Expected enlarged desktop QR title');
+if (!qrTitleRule || !/font-size:\s*33px/.test(qrTitleRule[1])) {
+  throw new Error('Expected 1.5x desktop QR title');
 }
-if (!qrSubtitleRule || !/font-size:\s*17px/.test(qrSubtitleRule[1])) {
-  throw new Error('Expected enlarged desktop QR subtitle');
+if (!qrSubtitleRule || !/font-size:\s*26px/.test(qrSubtitleRule[1])) {
+  throw new Error('Expected 1.5x desktop QR subtitle');
 }
 
-if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-card[\s\S]*width:\s*190px/.test(css)) {
+if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-card[\s\S]*width:\s*285px/.test(css)) {
   throw new Error('Expected QR card to shrink on narrow screens while staying in one row');
 }
 
@@ -71,9 +71,9 @@ if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-card[\s\S]*display:\s*fl
   throw new Error('Expected QR card to remain visible on narrow screens');
 }
 
-if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-title\s*\{[\s\S]*font-size:\s*19px/.test(css) ||
-    !/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-subtitle\s*\{[\s\S]*font-size:\s*15px/.test(css)) {
-  throw new Error('Expected enlarged QR copy at narrow widths');
+if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-title\s*\{[\s\S]*font-size:\s*29px/.test(css) ||
+    !/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-subtitle\s*\{[\s\S]*font-size:\s*23px/.test(css)) {
+  throw new Error('Expected 1.5x QR copy at narrow widths');
 }
 
 console.log('header QR module includes asset, text, and responsive styling');

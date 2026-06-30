@@ -15,8 +15,8 @@ if (!/now\.getMonth\(\)\s*\+\s*1\)\s*\+\s*'月'/.test(formatter[1])) {
 }
 
 const headerTime = css.match(/\.header-time\s*\{([^}]*)\}/);
-if (!headerTime || !/font-size\s*:\s*20px/.test(headerTime[1])) {
-  throw new Error('Header date-time should use a larger 20px desktop font');
+if (!headerTime || !/font-size\s*:\s*30px/.test(headerTime[1])) {
+  throw new Error('Header date-time should use a 1.5x 30px desktop font');
 }
 if (!/text-align\s*:\s*center/.test(headerTime[1]) ||
     !/align-self\s*:\s*center/.test(headerTime[1])) {
