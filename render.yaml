@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: yuexin-gold-display
+    runtime: node
+    plan: free
+    repo: https://github.com/yxj88888888/YueXin
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0

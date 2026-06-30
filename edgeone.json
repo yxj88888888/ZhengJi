@@ -1,0 +1,7 @@
+{
+  "name": "yuexin-gold-display",
+  "installCommand": "npm install",
+  "buildCommand": "echo \"Static assets ready\"",
+  "outputDirectory": "public",
+  "nodeVersion": "22.11.0"
+}

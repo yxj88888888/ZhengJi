@@ -1,0 +1,31 @@
+name: Deploy to Koyeb
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: "deploy-${{ github.ref_name }}"
+      cancel-in-progress: true
+    steps:
+      - name: Install and configure Koyeb CLI
+        uses: koyeb-community/koyeb-actions@v2
+        with:
+          api_token: "${{ secrets.KOYEB_API_TOKEN }}"
+
+      - name: Build and deploy to Koyeb
+        uses: koyeb/action-git-deploy@v1
+        with:
+          app-name: yuexin-gold
+          service-name: web
+          service-type: web
+          service-ports: "3000:http"
+          service-routes: "/:3000"
+          service-env: "NODE_ENV=production,HOST=0.0.0.0"
+          service-checks: "3000:http:/api/health"
+          git-branch: main

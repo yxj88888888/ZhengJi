@@ -1,0 +1,18 @@
+name: Capture opening gold price
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture 10:00 opening price
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            'https://www.shanxiyuexin.cn/gold-api/gold/current?capture=opening'
+          curl --fail --silent --show-error \
+            'https://www.shanxiyuexin.cn/gold-api/gold/history?range=today&capture=opening'

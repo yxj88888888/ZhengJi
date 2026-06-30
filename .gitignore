@@ -1,0 +1,24 @@
+node_modules/
+
+# Local runtime data with customer/order information.
+data/*.json
+data/daily/*.json
+
+# Local process logs.
+*.log
+codex-server.*.log
+
+# Local tooling and temporary archives.
+tools/
+*.zip
+
+# Machine-local assistant metadata.
+.claude/
+
+# Environment overrides.
+.env
+.env.*
+
+# Tencent Cloud EdgeOne
+.edgeone/*
+.tef_dist/*
