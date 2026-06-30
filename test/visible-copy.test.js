@@ -31,7 +31,7 @@ const expectedHtmlCopy = [
   '今日金价',
   '回购金价',
   '元/克',
-  '固定金价展示',
+  '交易时间 10:00 至 20:00',
   '价格以门店最新调整为准',
   '粤鑫金',
   '实时贵金属行情',
@@ -47,8 +47,8 @@ for (const text of ['更新', '价差']) {
   }
 }
 
-if (!html.includes('固定金价展示')) {
-  throw new Error('Missing expected fixed-price note copy');
+if (!html.includes('交易时间 10:00 至 20:00')) {
+  throw new Error('Missing expected trading-hours note copy');
 }
 
 for (const text of ['西部郑记金价修改', '保存金价', '需要账号密码']) {
