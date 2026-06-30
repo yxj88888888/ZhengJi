@@ -1,5 +1,5 @@
 {
-  "name": "yuexin-gold-display",
+  "name": "zhengji-gold-display",
   "version": "1.0.0",
   "description": "??????????",
   "main": "server.js",
@@ -12,3 +12,4 @@
     "node-fetch": "^2.7.0"
   }
 }
+

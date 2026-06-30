@@ -13,6 +13,7 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error \
-            'https://www.shanxiyuexin.cn/gold-api/gold/current?capture=opening'
+            'https://zhengji-gold.pages.dev/gold-api/gold/current?capture=opening'
           curl --fail --silent --show-error \
-            'https://www.shanxiyuexin.cn/gold-api/gold/history?range=today&capture=opening'
+            'https://zhengji-gold.pages.dev/gold-api/gold/history?range=today&capture=opening'
+

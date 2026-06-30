@@ -149,7 +149,7 @@ if (config.outputDirectory !== 'public') {
 
   const preOpenKv = {
     values: new Map([
-      ['yuexin_gold_20260615', JSON.stringify({
+      ['zhengji_gold_20260615', JSON.stringify({
         date: '2026-06-15',
         history: [
           {
@@ -203,3 +203,4 @@ if (config.outputDirectory !== 'public') {
   console.error(error);
   process.exit(1);
 });
+

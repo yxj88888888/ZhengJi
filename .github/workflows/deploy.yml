@@ -21,7 +21,7 @@ jobs:
       - name: Build and deploy to Koyeb
         uses: koyeb/action-git-deploy@v1
         with:
-          app-name: yuexin-gold
+          app-name: zhengji-gold
           service-name: web
           service-type: web
           service-ports: "3000:http"
@@ -29,3 +29,4 @@ jobs:
           service-env: "NODE_ENV=production,HOST=0.0.0.0"
           service-checks: "3000:http:/api/health"
           git-branch: main
+

@@ -1,6 +1,6 @@
 const GOLD_PRICE_SOURCE_URL =
   'https://goldcard.yunxua.com/index/index/getRealTimePrices?sid=1001';
-const YUEXIN_MARKUP = 5;
+const ZHENGJI_MARKUP = 5;
 const MARKUP_START_MINUTE = 15 * 60 + 30;
 const MARKUP_END_MINUTE = 20 * 60;
 
@@ -10,17 +10,17 @@ let historyDate = '';
 let stateLoadedDate = '';
 
 function getStateKey(date) {
-  return `yuexin_gold_${date.replace(/-/g, '')}`;
+  return `zhengji_gold_${date.replace(/-/g, '')}`;
 }
 
 function getKvStore(dependencies = {}) {
   if (dependencies.kv) return dependencies.kv;
-  if (dependencies.env && dependencies.env.YUEXIN_GOLD_KV) return dependencies.env.YUEXIN_GOLD_KV;
-  if (typeof YUEXIN_GOLD_KV !== 'undefined') return YUEXIN_GOLD_KV;
-  if (typeof yuexin_gold_prices !== 'undefined') return yuexin_gold_prices;
+  if (dependencies.env && dependencies.env.ZHENGJI_GOLD_KV) return dependencies.env.ZHENGJI_GOLD_KV;
+  if (typeof ZHENGJI_GOLD_KV !== 'undefined') return ZHENGJI_GOLD_KV;
+  if (typeof zhengji_gold_prices !== 'undefined') return zhengji_gold_prices;
   if (typeof my_kv !== 'undefined') return my_kv;
-  if (globalThis.YUEXIN_GOLD_KV) return globalThis.YUEXIN_GOLD_KV;
-  if (globalThis.yuexin_gold_prices) return globalThis.yuexin_gold_prices;
+  if (globalThis.ZHENGJI_GOLD_KV) return globalThis.ZHENGJI_GOLD_KV;
+  if (globalThis.zhengji_gold_prices) return globalThis.zhengji_gold_prices;
   if (globalThis.my_kv) return globalThis.my_kv;
   return null;
 }
@@ -29,12 +29,12 @@ function getKvDebug(dependencies = {}) {
   const env = dependencies.env || {};
   return {
     env_keys: Object.keys(env).filter(key => /kv|gold|yuexin/i.test(key)),
-    env_yuexin_gold_kv: Boolean(env.YUEXIN_GOLD_KV),
-    bare_yuexin_gold_kv: typeof YUEXIN_GOLD_KV !== 'undefined',
-    bare_yuexin_gold_prices: typeof yuexin_gold_prices !== 'undefined',
+    env_zhengji_gold_kv: Boolean(env.ZHENGJI_GOLD_KV),
+    bare_zhengji_gold_kv: typeof ZHENGJI_GOLD_KV !== 'undefined',
+    bare_zhengji_gold_prices: typeof zhengji_gold_prices !== 'undefined',
     bare_my_kv: typeof my_kv !== 'undefined',
-    global_yuexin_gold_kv: Boolean(globalThis.YUEXIN_GOLD_KV),
-    global_yuexin_gold_prices: Boolean(globalThis.yuexin_gold_prices),
+    global_zhengji_gold_kv: Boolean(globalThis.ZHENGJI_GOLD_KV),
+    global_zhengji_gold_prices: Boolean(globalThis.zhengji_gold_prices),
     global_my_kv: Boolean(globalThis.my_kv),
   };
 }
@@ -78,7 +78,7 @@ function formatBeijingTime(date, hour, minute = 0) {
     `${String(minute).padStart(2, '0')}:00`;
 }
 
-function shouldApplyYuexinMarkup(now = new Date()) {
+function shouldApplyZhengjiMarkup(now = new Date()) {
   const parts = getBeijingParts(now);
   if (parts.weekday === 'Sat' || parts.weekday === 'Sun') return false;
 
@@ -90,7 +90,7 @@ function shouldApplyYuexinMarkup(now = new Date()) {
 export function applyDisplayPriceRule(sourcePrice, now = new Date()) {
   const sourceSale = Number(sourcePrice.sale_price);
   const sourceBuyback = Number(sourcePrice.buyback_price);
-  const markup = shouldApplyYuexinMarkup(now) ? YUEXIN_MARKUP : 0;
+  const markup = shouldApplyZhengjiMarkup(now) ? ZHENGJI_MARKUP : 0;
 
   return {
     sale_price: sourceSale + markup,
@@ -269,3 +269,4 @@ export async function onRequest(context) {
 }
 
 export default onRequest;
+

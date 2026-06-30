@@ -18,7 +18,7 @@ if (!workflow.includes("cron: '0 2 * * *'")) {
   throw new Error('Expected opening-price capture to run at 10:00 Beijing time');
 }
 
-if (!workflow.includes('https://www.shanxiyuexin.cn/gold-api/gold/current')) {
+if (!workflow.includes('https://zhengji-gold.pages.dev/gold-api/gold/current')) {
   throw new Error('Expected opening-price capture to call the cloud current-price API');
 }
 
