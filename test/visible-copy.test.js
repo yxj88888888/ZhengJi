@@ -41,10 +41,14 @@ for (const text of expectedHtmlCopy) {
   if (!html.includes(text)) throw new Error(`Missing expected HTML copy: ${text}`);
 }
 
-for (const text of ['更新', '价差', '固定金价展示']) {
-  if (!app.includes(text) && !html.includes(text)) {
-    throw new Error(`Missing expected fixed-price copy: ${text}`);
+for (const text of ['更新', '价差']) {
+  if (app.includes(text) || html.includes(text)) {
+    throw new Error(`Removed metadata copy should not be visible: ${text}`);
   }
+}
+
+if (!html.includes('固定金价展示')) {
+  throw new Error('Missing expected fixed-price note copy');
 }
 
 for (const text of ['西部郑记金价修改', '保存金价', '需要账号密码']) {

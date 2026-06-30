@@ -57,26 +57,6 @@ function updatePriceDisplay() {
   setText('buyback-price', newBuyback.toFixed(2));
   setText('header-datetime', formatHeaderDateTime());
 
-  const updateTime = currentGold.update_time || '--';
-  const spread = newSale - newBuyback;
-
-  const changeInfo = document.getElementById('price-change-info');
-  if (changeInfo) {
-    changeInfo.innerHTML =
-      `<span class="meta-line">` +
-        `<span class="meta-label">更新</span>` +
-        `<strong class="meta-value">${updateTime}</strong>` +
-      `</span>`;
-  }
-
-  const rangeInfo = document.getElementById('price-range-info');
-  if (rangeInfo) {
-    rangeInfo.innerHTML =
-      `<span class="meta-line">` +
-        `<span class="meta-label">价差</span>` +
-        `<strong class="meta-value">${spread.toFixed(2)}</strong>` +
-      `</span>`;
-  }
 }
 
 async function fetchGoldCurrent() {

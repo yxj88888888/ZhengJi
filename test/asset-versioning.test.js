@@ -3,11 +3,11 @@ const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 
-if (!html.includes('css/style.css?v=high-low-align-20260619')) {
+if (!html.includes('css/style.css?v=fixed-price-no-meta-20260630')) {
   throw new Error('Expected stylesheet URL to be versioned so price-meta layout changes refresh in the browser');
 }
 
-if (!html.includes('js/app.js?v=fixed-price-20260630')) {
+if (!html.includes('js/app.js?v=fixed-price-no-meta-20260630')) {
   throw new Error('Expected local scripts to keep cache-busting versions');
 }
 

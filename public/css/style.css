@@ -234,89 +234,8 @@ body {
   font-weight: 400;
   white-space: nowrap;
 }
-.price-meta {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: flex; align-items: flex-end; gap: 8px;
-  flex-direction: column;
-  min-width: 230px;
-  padding: 0 0 0 18px;
-  border-left: 1px solid rgba(255,255,255,0.08);
-  font-size: 22px; color: var(--text-muted);
-  text-align: right;
-  white-space: nowrap;
-}
-.price-range-meta {
-  top: 0;
-  font-size: inherit;
-}
-.price-range-meta .price-change {
-  font-size: inherit;
-  row-gap: 4px;
-}
-.price-range-meta .meta-line,
-.price-range-meta .meta-label,
-.price-range-meta .meta-value {
-  line-height: 1.2;
-}
 .meta-divider {
   color: rgba(255,255,255,0.1);
-}
-.price-change {
-  display: grid;
-  grid-template-columns: max-content minmax(96px, 1fr);
-  column-gap: 10px;
-  row-gap: 4px;
-  align-items: baseline;
-  font-size: 22px;
-  color: var(--text-muted);
-}
-.meta-label {
-  text-align: left;
-  justify-self: start;
-}
-.meta-value {
-  min-width: 0;
-  text-align: right;
-  justify-self: end;
-  font-variant-numeric: tabular-nums;
-}
-.price-change strong {
-  color: var(--gold-light);
-  font-weight: 700;
-}
-.price-change strong,
-.price-change .indicator-value,
-.price-change .indicator-percent {
-  background: linear-gradient(180deg, #fff4b8 0%, #f0d060 42%, #d4a537 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  font-weight: 800;
-  text-shadow: 0 0 12px rgba(212, 165, 55, 0.18);
-}
-.meta-line {
-  display: contents;
-  line-height: 1.2;
-}
-.change-line {
-  display: contents;
-}
-.change-value {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  line-height: 1;
-}
-.indicator-value {
-  font-size: 1.18em;
-  line-height: 1;
-}
-.indicator-percent {
-  font-size: 0.78em;
 }
 .price-sub { font-size: 14px; color: var(--text-muted); }
 .price-time { font-size: 14px; }
@@ -432,12 +351,6 @@ body {
   .price-label { font-size: 30px; margin-bottom: 10px; }
   .price-label::before { width: 10px; height: 36px; }
   .price-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-  .price-meta {
-    min-width: 150px;
-    padding: 0 0 0 8px;
-    font-size: 18px;
-  }
-  .price-change { font-size: 18px; gap: 6px; }
   .price-unit { font-size: 30px; }
 }
 @media (max-width: 480px) {
@@ -491,12 +404,6 @@ body {
   .price-hero { margin-bottom: 8px; }
   .price-card { padding: 14px 12px; }
   .price-row { gap: 6px; }
-  .price-meta {
-    min-width: 128px;
-    padding: 0 0 0 6px;
-    font-size: 14px;
-  }
-  .price-change { font-size: 14px; gap: 5px; }
   .price-unit { font-size: 24px; }
 }
 
