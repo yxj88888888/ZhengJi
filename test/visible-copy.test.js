@@ -63,6 +63,11 @@ const expectedAdminCopy = [
   '保存金价',
   '最高权限账号：18189182920',
   '设置手机号权限',
+  '当前账号',
+  '职位',
+  '权限',
+  '店长',
+  '管理员',
 ];
 
 for (const text of expectedAdminCopy) {

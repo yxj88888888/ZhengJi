@@ -285,7 +285,7 @@ function adminPage(requestUrl = '') {
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
   }
   h1 { margin: 0 0 18px; color: #f0d060; font-size: 24px; }
-  form[hidden], .admin-only[hidden] { display: none; }
+  form[hidden], .admin-only[hidden], .account-table[hidden] { display: none; }
   label { display: block; margin: 14px 0 6px; color: #b8b8c8; font-size: 14px; }
   input {
     width: 100%;
@@ -310,6 +310,12 @@ function adminPage(requestUrl = '') {
     cursor: pointer;
   }
   .divider { height: 1px; margin: 22px 0 6px; background: rgba(212, 165, 55, 0.18); }
+  .account-table { margin-top: 22px; overflow: hidden; border: 1px solid rgba(212, 165, 55, 0.18); border-radius: 10px; }
+  .account-table h2 { margin: 0; padding: 12px 14px; color: #f0d060; font-size: 16px; background: rgba(17, 21, 34, 0.72); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; border-top: 1px solid rgba(212, 165, 55, 0.12); text-align: left; vertical-align: top; }
+  th { color: #f0d060; font-weight: 800; background: rgba(17, 21, 34, 0.5); }
+  td { color: #e8e8ed; }
   .status { min-height: 22px; margin-top: 14px; color: #f0d060; font-size: 14px; }
   .muted { margin-top: 14px; color: #8f94a8; font-size: 13px; line-height: 1.6; }
 </style>
@@ -332,6 +338,19 @@ function adminPage(requestUrl = '') {
     <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
     <button class="submit" type="submit">\u4fdd\u5b58\u91d1\u4ef7</button>
   </form>
+  <section class="account-table" id="account-table" hidden>
+    <h2>\u5f53\u524d\u8d26\u53f7</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>\u8d26\u53f7</th>
+          <th>\u804c\u4f4d</th>
+          <th>\u6743\u9650</th>
+        </tr>
+      </thead>
+      <tbody id="account-table-body"></tbody>
+    </table>
+  </section>
   <form class="admin-only" id="grant-form" hidden>
     <div class="divider"></div>
     <div class="muted">\u6700\u9ad8\u6743\u9650\u8d26\u53f7\u53ef\u7ed9\u5176\u4ed6\u624b\u673a\u53f7\u8bbe\u7f6e\u767b\u5f55\u548c\u4fee\u6539\u91d1\u4ef7\u6743\u9650\u3002</div>
@@ -350,6 +369,8 @@ const accountStatusEl = document.getElementById('account-status');
 const loginForm = document.getElementById('login-form');
 const priceForm = document.getElementById('login-price-form');
 const grantForm = document.getElementById('grant-form');
+const accountTable = document.getElementById('account-table');
+const accountTableBody = document.getElementById('account-table-body');
 const saleInput = document.getElementById('sale-price');
 const buybackInput = document.getElementById('buyback-price');
 const edgeOnePreviewToken = ${JSON.stringify(previewToken)};
@@ -383,9 +404,32 @@ function showLoggedIn(json) {
   loginForm.hidden = true;
   priceForm.hidden = false;
   grantForm.hidden = !json.can_manage_users;
+  renderAccountRows(json);
   accountStatusEl.textContent = json.can_manage_users
     ? '\u5df2\u767b\u5f55\u6700\u9ad8\u6743\u9650\u8d26\u53f7\uff1a' + json.admin_phone
     : '\u5df2\u767b\u5f55\u6388\u6743\u8d26\u53f7\uff1a' + json.admin_phone;
+}
+
+function roleText(role) {
+  return role === 'super' ? '\u5e97\u957f' : '\u7ba1\u7406\u5458';
+}
+
+function permissionText(role) {
+  return role === 'super'
+    ? '\u4fee\u6539\u91d1\u4ef7\u3001\u7ba1\u7406\u8d26\u53f7'
+    : '\u4fee\u6539\u91d1\u4ef7';
+}
+
+function renderAccountRows(json) {
+  const accounts = Array.isArray(json.authorized_phones) ? json.authorized_phones : [];
+  const sortedAccounts = accounts.slice().sort((left, right) => {
+    if (left.role === right.role) return left.phone.localeCompare(right.phone);
+    return left.role === 'super' ? -1 : 1;
+  });
+  accountTableBody.innerHTML = sortedAccounts.map(account => (
+    '<tr><td>' + account.phone + '</td><td>' + roleText(account.role) + '</td><td>' + permissionText(account.role) + '</td></tr>'
+  )).join('');
+  accountTable.hidden = sortedAccounts.length === 0;
 }
 
 async function loadPrice() {
@@ -468,6 +512,7 @@ document.getElementById('grant-form').addEventListener('submit', async (event) =
     }
     document.getElementById('grant-phone').value = '';
     document.getElementById('grant-password').value = '';
+    renderAccountRows(json);
     setStatus('\u5df2\u6388\u6743\u624b\u673a\u53f7\uff1a' + json.data.phone);
   } catch (error) {
     setStatus(error.message || '\u8bbe\u7f6e\u5931\u8d25');
@@ -648,7 +693,12 @@ export async function handleApiRequest(request, dependencies = {}) {
       }
 
       const account = await upsertAdminAccount(storage, accounts, { phone, password, role: 'editor' });
-      return json({ code: 1, data: { phone: account.phone, role: account.role } });
+      const nextAccounts = await loadAdminAccounts(storage);
+      return json({
+        code: 1,
+        data: { phone: account.phone, role: account.role },
+        ...adminAccountsPayload(nextAccounts, superAuth.account),
+      });
     }
 
     return json({ code: 0, message: 'Not found' }, 404);

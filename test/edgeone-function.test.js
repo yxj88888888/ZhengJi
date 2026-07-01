@@ -112,6 +112,12 @@ function createLegacyBlob(initial = new Map()) {
       !adminHtml.includes('loadPrice().catch')) {
     throw new Error('Expected admin page script to include complete price loading and saving handlers');
   }
+  if (!adminHtml.includes('id="account-table" hidden') ||
+      !adminHtml.includes('function renderAccountRows') ||
+      !adminHtml.includes('function roleText') ||
+      !adminHtml.includes('function permissionText')) {
+    throw new Error('Expected admin page to render an account table after login');
+  }
 
   const previewAdminResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin?eo_token=test-token&eo_time=123456'),
