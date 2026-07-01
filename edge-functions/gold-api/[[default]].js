@@ -300,7 +300,7 @@ function adminPage() {
     <form id="login-form">
       <label for="login-phone">手机号</label>
       <input id="login-phone" name="phone" inputmode="numeric" autocomplete="username" required>
-      <label for="login-password">??</label>
+      <label for="login-password">密码</label>
       <input id="login-password" name="password" type="password" autocomplete="current-password" required>
       <button class="submit" type="submit">登录后台</button>
     </form>
