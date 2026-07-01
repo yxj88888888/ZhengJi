@@ -1,0 +1,43 @@
+const fs = require('fs');
+const path = require('path');
+
+const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'style.css'), 'utf8');
+
+function mediaBlock(maxWidth) {
+  const marker = `@media (max-width: ${maxWidth}px)`;
+  const start = css.indexOf(marker);
+  if (start === -1) throw new Error(`Missing max-width ${maxWidth}px media block`);
+  const next = css.indexOf('\n@media', start + marker.length);
+  return css.slice(start, next === -1 ? css.length : next);
+}
+
+const headerInner = css.match(/\.header-inner\s*\{([^}]*)\}/m);
+if (!headerInner || !/grid-template-columns:\s*minmax\(260px,\s*1fr\)\s+auto\s+minmax\(260px,\s*1fr\)/.test(headerInner[1])) {
+  throw new Error('Desktop header should use balanced flexible columns');
+}
+
+const mediumBlock = mediaBlock(900);
+if (!/grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"qr time"/.test(mediumBlock)) {
+  throw new Error('Medium header should move time below the logo instead of squeezing one row');
+}
+if (!/\.header-qr-card\s*\{[\s\S]*width:\s*min\(42vw,\s*285px\)/.test(mediumBlock)) {
+  throw new Error('Medium QR card should scale with viewport width');
+}
+
+const mobileBlock = mediaBlock(768);
+if (!/grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"time time"/.test(mobileBlock)) {
+  throw new Error('Mobile header should give the time a full row');
+}
+if (!/\.logo-title\s*\{[\s\S]*max-width:\s*2\.4em/.test(mobileBlock)) {
+  throw new Error('Mobile logo title should be allowed to wrap compactly');
+}
+
+const tinyBlock = mediaBlock(480);
+if (!/\.header-qr-card\s*\{[\s\S]*width:\s*min\(58vw,\s*225px\)/.test(tinyBlock)) {
+  throw new Error('Tiny QR card should not exceed available viewport space');
+}
+if (!/\.header-time\s*\{[\s\S]*font-size:\s*clamp\(14px,\s*4\.4vw,\s*21px\)/.test(tinyBlock)) {
+  throw new Error('Tiny header time should shrink with viewport width');
+}
+
+console.log('responsive header avoids overlap across window sizes');

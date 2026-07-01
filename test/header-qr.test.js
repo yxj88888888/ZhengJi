@@ -32,17 +32,18 @@ for (const selector of ['.header-qr-card', '.header-qr-img', '.header-qr-title',
 }
 
 const qrImageRule = css.match(/\.header-qr-img\s*\{([^}]*)\}/m);
-if (!qrImageRule || !/width:\s*132px/.test(qrImageRule[1]) || !/height:\s*132px/.test(qrImageRule[1])) {
-  throw new Error('Expected 1.5x 132px header QR image');
+if (!qrImageRule || !/width:\s*clamp\(74px,\s*10vw,\s*132px\)/.test(qrImageRule[1]) ||
+    !/height:\s*clamp\(74px,\s*10vw,\s*132px\)/.test(qrImageRule[1])) {
+  throw new Error('Expected responsive clamped desktop QR image');
 }
 
 const qrCardRule = css.match(/\.header-qr-card\s*\{([^}]*)\}/m);
-if (!qrCardRule || !/width:\s*363px/.test(qrCardRule[1])) {
-  throw new Error('Expected 1.5x header QR card width');
+if (!qrCardRule || !/width:\s*clamp\(220px,\s*28vw,\s*363px\)/.test(qrCardRule[1])) {
+  throw new Error('Expected responsive clamped header QR card width');
 }
 
-if (!qrCardRule || !/gap:\s*15px/.test(qrCardRule[1])) {
-  throw new Error('Expected 1.5x gap between header QR image and copy');
+if (!qrCardRule || !/gap:\s*clamp\(8px,\s*1\.2vw,\s*15px\)/.test(qrCardRule[1])) {
+  throw new Error('Expected responsive gap between header QR image and copy');
 }
 
 const qrCopyRule = css.match(/\.header-qr-copy\s*\{([^}]*)\}/m);
@@ -56,24 +57,24 @@ if (!qrCopyRule || !/flex:\s*1/.test(qrCopyRule[1]) ||
 
 const qrTitleRule = css.match(/\.header-qr-title\s*\{([^}]*)\}/m);
 const qrSubtitleRule = css.match(/\.header-qr-subtitle\s*\{([^}]*)\}/m);
-if (!qrTitleRule || !/font-size:\s*33px/.test(qrTitleRule[1])) {
-  throw new Error('Expected 1.5x desktop QR title');
+if (!qrTitleRule || !/font-size:\s*clamp\(20px,\s*2\.55vw,\s*33px\)/.test(qrTitleRule[1])) {
+  throw new Error('Expected responsive desktop QR title');
 }
-if (!qrSubtitleRule || !/font-size:\s*26px/.test(qrSubtitleRule[1])) {
-  throw new Error('Expected 1.5x desktop QR subtitle');
+if (!qrSubtitleRule || !/font-size:\s*clamp\(15px,\s*2vw,\s*26px\)/.test(qrSubtitleRule[1])) {
+  throw new Error('Expected responsive desktop QR subtitle');
 }
 
-if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-card[\s\S]*width:\s*285px/.test(css)) {
-  throw new Error('Expected QR card to shrink on narrow screens while staying in one row');
+if (!/@media\s*\(max-width:\s*900px\)[\s\S]*grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"qr time"/.test(css)) {
+  throw new Error('Expected medium header to place time on its own grid row');
 }
 
 if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-card[\s\S]*display:\s*flex/.test(css)) {
   throw new Error('Expected QR card to remain visible on narrow screens');
 }
 
-if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-title\s*\{[\s\S]*font-size:\s*29px/.test(css) ||
-    !/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-subtitle\s*\{[\s\S]*font-size:\s*23px/.test(css)) {
-  throw new Error('Expected 1.5x QR copy at narrow widths');
+if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-title\s*\{[\s\S]*font-size:\s*clamp\(18px,\s*5vw,\s*29px\)/.test(css) ||
+    !/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-subtitle\s*\{[\s\S]*font-size:\s*clamp\(14px,\s*4vw,\s*23px\)/.test(css)) {
+  throw new Error('Expected responsive QR copy at narrow widths');
 }
 
 console.log('header QR module includes asset, text, and responsive styling');
