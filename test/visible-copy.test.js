@@ -37,6 +37,7 @@ const expectedHtmlCopy = [
   '交易时间 10:00 至 20:00',
   '价格以门店最新调整为准',
   '粤鑫金',
+  '店铺地址：西部黄金珠宝城二楼西部郑记对面',
 ];
 
 for (const text of expectedHtmlCopy) {
