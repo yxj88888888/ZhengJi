@@ -26,8 +26,11 @@ if (!html.includes('class="header-qr-placeholder"')) {
 if (html.includes('images/store-wechat-qr.jpg')) {
   throw new Error('Header should reserve the QR position without loading the old QR image');
 }
-if (!html.includes('关注粤鑫金') || !html.includes('了解实时行情')) {
-  throw new Error('Expected QR card follow text');
+if (!html.includes('欢迎关注店铺微信')) {
+  throw new Error('Expected updated QR card follow text');
+}
+if (html.includes('关注粤鑫金') || html.includes('了解实时行情')) {
+  throw new Error('Old QR card follow text should be removed');
 }
 
 for (const selector of ['.header-qr-card', '.header-qr-placeholder', '.header-qr-title', '.header-qr-subtitle']) {
@@ -78,6 +81,20 @@ if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-card[\s\S]*display:\s*fl
 if (!/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-title\s*\{[\s\S]*font-size:\s*clamp\(18px,\s*5vw,\s*29px\)/.test(css) ||
     !/@media\s*\(max-width:\s*768px\)[\s\S]*\.header-qr-subtitle\s*\{[\s\S]*font-size:\s*clamp\(14px,\s*4vw,\s*23px\)/.test(css)) {
   throw new Error('Expected responsive QR copy at narrow widths');
+}
+
+const portraitMarker = '@media (orientation: portrait) and (min-width: 520px) and (max-aspect-ratio: 3/4)';
+const portraitStart = css.indexOf(portraitMarker);
+if (portraitStart === -1) {
+  throw new Error('Expected portrait QR layout media query to include 566px-wide signage screens');
+}
+const portraitNext = css.indexOf('\n@media', portraitStart + portraitMarker.length);
+const portraitBlock = css.slice(portraitStart, portraitNext === -1 ? css.length : portraitNext);
+if (!/\.header-qr-card\s*\{[\s\S]*flex-direction:\s*column[\s\S]*justify-content:\s*flex-start/.test(portraitBlock)) {
+  throw new Error('Portrait QR card should place the reserved QR box above the copy');
+}
+if (!/\.header-qr-subtitle\s*\{[\s\S]*display:\s*none/.test(portraitBlock)) {
+  throw new Error('Portrait QR card should show the updated single-line copy only');
 }
 
 console.log('header QR module includes asset, text, and responsive styling');

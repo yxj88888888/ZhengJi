@@ -567,7 +567,7 @@ body {
   }
 }
 
-@media (orientation: portrait) and (min-width: 600px) and (max-aspect-ratio: 3/4) {
+@media (orientation: portrait) and (min-width: 520px) and (max-aspect-ratio: 3/4) {
   .header-bar {
     padding: clamp(10px, 1.35vh, 20px) clamp(14px, 3.4vw, 42px);
   }
@@ -582,21 +582,32 @@ body {
   }
   .header-qr-card {
     grid-area: qr;
-    width: clamp(160px, 32vw, 340px);
-    min-height: clamp(74px, 7.2vh, 130px);
-    padding: clamp(7px, 1vw, 13px);
-    gap: clamp(7px, 1.1vw, 14px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: clamp(132px, 25vw, 240px);
+    min-height: clamp(112px, 12.2vh, 178px);
+    padding: clamp(7px, 0.9vh, 12px) clamp(8px, 1.2vw, 14px);
+    gap: clamp(5px, 0.65vh, 10px);
   }
   .header-qr-placeholder {
-    width: clamp(52px, 7vh, 112px);
-    height: clamp(52px, 7vh, 112px);
-    flex-basis: clamp(52px, 7vh, 112px);
+    width: clamp(68px, 8.5vh, 118px);
+    height: clamp(68px, 8.5vh, 118px);
+    flex: 0 0 clamp(68px, 8.5vh, 118px);
+  }
+  .header-qr-copy {
+    flex: 0 0 auto;
+    align-self: center;
+    justify-content: flex-start;
+    width: 100%;
+    line-height: 1.1;
   }
   .header-qr-title {
-    font-size: clamp(16px, 2.75vw, 32px);
+    font-size: clamp(14px, 2.25vw, 23px);
   }
   .header-qr-subtitle {
-    font-size: clamp(12px, 2.1vw, 23px);
+    display: none;
   }
   .header-center {
     display: contents;
