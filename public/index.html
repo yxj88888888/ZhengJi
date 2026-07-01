@@ -6,7 +6,7 @@
 <title>粤鑫金 - 实时贵金属行情</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=fixed-price-no-meta-20260630">
+<link rel="stylesheet" href="css/style.css?v=admin-entry-20260701">
 </head>
 <body class="min-h-screen">
 
@@ -82,9 +82,26 @@
   </section>
 </main>
 
+<a class="admin-entry-link" id="admin-entry-link" href="/gold-api/admin" aria-label="进入金价后台登录页面">
+  <i class="fa fa-user-secret" aria-hidden="true"></i>
+  <span>后台入口</span>
+</a>
+
 <span id="update-time" hidden></span>
 <span id="price-spread" hidden></span>
 <span id="record-status" hidden></span>
+<script>
+  (function () {
+    var adminEntry = document.getElementById('admin-entry-link');
+    if (!adminEntry) return;
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('eo_token');
+    var time = params.get('eo_time');
+    if (token && time) {
+      adminEntry.href = '/gold-api/admin?eo_token=' + encodeURIComponent(token) + '&eo_time=' + encodeURIComponent(time);
+    }
+  })();
+</script>
 <script src="js/app.js?v=fixed-price-no-meta-20260630"></script>
 </body>
 </html>
