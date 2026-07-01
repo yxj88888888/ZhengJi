@@ -255,28 +255,42 @@ function buildGoldAdminPage() {
   <div class="muted" id="account-status"></div>
 </main>
 <script>
-const saleInput = document.getElementById('sale-price');
-const buybackInput = document.getElementById('buyback-price');
 const statusEl = document.getElementById('status');
 const accountStatusEl = document.getElementById('account-status');
 const loginForm = document.getElementById('login-form');
 const priceForm = document.getElementById('login-price-form');
+const saleInput = document.getElementById('sale-price');
+const buybackInput = document.getElementById('buyback-price');
+const edgeOnePreviewToken = '';
+const edgeOnePreviewTime = '';
 let loggedInPhone = '';
 let loggedInPassword = '';
 
 function setStatus(text) {
   statusEl.textContent = text;
 }
+
 function showPriceForm() {
   loginForm.hidden = true;
   priceForm.hidden = false;
 }
+
 function apiPath(path) {
   const params = new URLSearchParams(window.location.search);
-  const token = params.get('eo_token');
-  const time = params.get('eo_time');
+  const token = params.get('eo_token') || edgeOnePreviewToken;
+  const time = params.get('eo_time') || edgeOnePreviewTime;
   if (!token || !time) return path;
   return path + '?eo_token=' + encodeURIComponent(token) + '&eo_time=' + encodeURIComponent(time);
+}
+
+async function requestJson(path, options) {
+  const response = await fetch(apiPath(path), options);
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error(response.status === 401 ? '临时链接已过期，请重新打开最新后台链接' : '接口返回异常');
+  }
 }
 
 document.querySelectorAll('.tab').forEach(tab => {
@@ -289,8 +303,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 async function loadPrice() {
-  const response = await fetch(apiPath('/gold-api/admin/price'));
-  const json = await response.json();
+  const json = await requestJson('/gold-api/admin/price');
   if (json.code !== 1) throw new Error(json.message || '读取失败');
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
@@ -301,22 +314,25 @@ async function loadPrice() {
 document.getElementById('bind-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus('正在绑定...');
-  const response = await fetch(apiPath('/gold-api/admin/bind'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      phone: document.getElementById('bind-phone').value,
-      password: document.getElementById('bind-password').value,
-    }),
-  });
-  const json = await response.json();
-  if (json.code !== 1) {
-    setStatus(json.message || '绑定失败');
-    return;
+  try {
+    const json = await requestJson('/gold-api/admin/bind', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: document.getElementById('bind-phone').value,
+        password: document.getElementById('bind-password').value,
+      }),
+    });
+    if (json.code !== 1) {
+      setStatus(json.message || '绑定失败');
+      return;
+    }
+    document.getElementById('login-phone').value = json.data.phone;
+    accountStatusEl.textContent = '已绑定手机号：' + json.data.phone;
+    setStatus('绑定成功，请返回登录后台后修改金价');
+  } catch (error) {
+    setStatus(error.message || '绑定失败');
   }
-  document.getElementById('login-phone').value = json.data.phone;
-  accountStatusEl.textContent = '已绑定手机号：' + json.data.phone;
-  setStatus('绑定成功，请用手机号和密码保存金价');
 });
 
 document.getElementById('login-form').addEventListener('submit', async (event) => {
@@ -324,38 +340,54 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
   setStatus('正在登录...');
   const phone = document.getElementById('login-phone').value;
   const password = document.getElementById('login-password').value;
-  const response = await fetch(apiPath('/gold-api/admin/login'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone, password }),
-  });
-  const json = await response.json();
-  if (json.code !== 1) {
-    setStatus(json.message || '登录失败');
-    return;
+  try {
+    const json = await requestJson('/gold-api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, password }),
+    });
+    if (json.code !== 1) {
+      setStatus(json.message || '登录失败');
+      return;
+    }
+    loggedInPhone = phone;
+    loggedInPassword = password;
+    saleInput.value = json.data.sale_price;
+    buybackInput.value = json.data.buyback_price;
+    showPriceForm();
+    accountStatusEl.textContent = '已登录手机号：' + json.admin_phone;
+    setStatus('登录成功，当前更新时间：' + json.data.update_time);
+  } catch (error) {
+    setStatus(error.message || '登录失败');
   }
-  loggedInPhone = phone;
-  loggedInPassword = password;
-  saleInput.value = json.data.sale_price;
-  buybackInput.value = json.data.buyback_price;
-  showPriceForm();
-  accountStatusEl.textContent = '已登录手机号：' + json.admin_phone;
-  setStatus('登录成功，当前更新时间：' + json.data.update_time);
 });
 
 document.getElementById('login-price-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus('正在保存...');
-  const response = await fetch(apiPath('/gold-api/admin/price'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      phone: loggedInPhone,
-      password: loggedInPassword,
-      sale_price: saleInput.value,
-      buyback_price: buybackInput.value,
-    }),
-  });
+  try {
+    const json = await requestJson('/gold-api/admin/price', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: loggedInPhone,
+        password: loggedInPassword,
+        sale_price: saleInput.value,
+        buyback_price: buybackInput.value,
+      }),
+    });
+    if (json.code !== 1) {
+      setStatus(json.message || '保存失败');
+      return;
+    }
+    saleInput.value = json.data.sale_price;
+    buybackInput.value = json.data.buyback_price;
+    setStatus('已保存：' + json.data.update_time);
+  } catch (error) {
+    setStatus(error.message || '保存失败');
+  }
+});
+
 loadPrice().catch(error => setStatus(error.message || '读取失败'));
 </script>
 </body>

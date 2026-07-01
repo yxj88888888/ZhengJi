@@ -13,13 +13,17 @@ const expectedSnippets = [
   'requireAccountMatch(account, req.body)',
   'id="login-form"',
   'id="login-price-form" hidden',
+  '绑定手机号',
+  '设置密码',
+  '登录后台',
+  '手机号或密码不正确',
   '/gold-api/admin/login',
   'loggedInPhone',
   'function apiPath(path)',
-  "fetch(apiPath('/gold-api/admin/price'))",
-  '绑定手机号',
-  '设置密码',
-  '手机号或密码不正确',
+  "requestJson('/gold-api/admin/price'",
+  'edgeOnePreviewToken',
+  "setStatus('已保存：'",
+  'loadPrice().catch',
 ];
 
 for (const snippet of expectedSnippets) {

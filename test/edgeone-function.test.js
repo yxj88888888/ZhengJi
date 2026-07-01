@@ -103,9 +103,24 @@ function createLegacyBlob(initial = new Map()) {
     throw new Error('Expected admin page Chinese copy to render without question marks');
   }
   if (!adminHtml.includes('function apiPath(path)') ||
-      !adminHtml.includes("fetch(apiPath('/gold-api/admin/price'))") ||
-      !adminHtml.includes("fetch(apiPath('/gold-api/admin/bind')")) {
+      !adminHtml.includes("requestJson('/gold-api/admin/price'") ||
+      !adminHtml.includes("requestJson('/gold-api/admin/bind'")) {
     throw new Error('Expected admin page API calls to preserve EdgeOne preview token');
+  }
+  if (!adminHtml.includes("requestJson('/gold-api/admin/price'") ||
+      !adminHtml.includes("setStatus('已保存：'") ||
+      !adminHtml.includes('loadPrice().catch')) {
+    throw new Error('Expected admin page script to include complete price loading and saving handlers');
+  }
+
+  const previewAdminResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin?eo_token=test-token&eo_time=123456'),
+    dependencies
+  );
+  const previewAdminHtml = await previewAdminResponse.text();
+  if (!previewAdminHtml.includes('const edgeOnePreviewToken = "test-token";') ||
+      !previewAdminHtml.includes('const edgeOnePreviewTime = "123456";')) {
+    throw new Error('Expected admin page to embed EdgeOne preview credentials for API calls');
   }
 
   const unboundSaveResponse = await edgeFunction.handleApiRequest(
