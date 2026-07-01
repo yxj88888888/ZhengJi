@@ -91,8 +91,8 @@ function createLegacyBlob(initial = new Map()) {
     dependencies
   );
   const adminHtml = await adminPageResponse.text();
-  if (adminPageResponse.status !== 200 || !adminHtml.includes('绑定手机号') || !adminHtml.includes('设置密码')) {
-    throw new Error('Expected admin page to render phone binding and password setup');
+  if (adminPageResponse.status !== 200 || adminHtml.includes('data-tab="bind"') || !adminHtml.includes('id="grant-form" hidden')) {
+    throw new Error('Expected admin page to hide phone permission setup until login');
   }
   if (!adminHtml.includes('id="login-form"') ||
       !adminHtml.includes('id="login-price-form" hidden') ||
@@ -140,11 +140,38 @@ function createLegacyBlob(initial = new Map()) {
     throw new Error('Expected price save to require a bound phone account first');
   }
 
+  const unauthorizedBindResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/bind', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13800138000', password: 'abc123' }),
+    }),
+    dependencies
+  );
+  if (unauthorizedBindResponse.status !== 401) {
+    throw new Error('Expected account authorization to require a logged-in super admin');
+  }
+
+  const superLoginResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '18189182920', password: 'owner123' }),
+    }),
+    dependencies
+  );
+  const superLoginPayload = await superLoginResponse.json();
+  if (superLoginResponse.status !== 200 || superLoginPayload.role !== 'super' || !superLoginPayload.can_manage_users) {
+    throw new Error('Expected 18189182920 to log in as the super admin');
+  }
+
   const bindResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin/bind', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        admin_phone: '18189182920',
+        admin_password: 'owner123',
         phone: '13800138000',
         password: 'abc123',
       }),
@@ -153,10 +180,10 @@ function createLegacyBlob(initial = new Map()) {
   );
   const bindPayload = await bindResponse.json();
   if (bindResponse.status !== 200 || bindPayload.code !== 1 || bindPayload.data.phone !== '13800138000') {
-    throw new Error('Expected valid phone binding to succeed');
+    throw new Error('Expected super admin to authorize another phone account');
   }
   if (!kv.values.has('zhengji_gold_admin_account')) {
-    throw new Error('Expected admin account to be saved under the ZhengJi admin KV key');
+    throw new Error('Expected admin accounts to be saved under the ZhengJi admin KV key');
   }
 
   const loginResponse = await edgeFunction.handleApiRequest(
@@ -174,8 +201,9 @@ function createLegacyBlob(initial = new Map()) {
   if (loginResponse.status !== 200 ||
       loginPayload.code !== 1 ||
       loginPayload.admin_phone !== '13800138000' ||
+      loginPayload.role !== 'editor' ||
       loginPayload.data.sale_price !== '1130.00') {
-    throw new Error('Expected valid admin login to return current editable prices');
+    throw new Error('Expected authorized editor login to return current editable prices');
   }
 
   const wrongPasswordResponse = await edgeFunction.handleApiRequest(
@@ -221,8 +249,10 @@ function createLegacyBlob(initial = new Map()) {
     dependencies
   );
   const adminPricePayload = await adminPriceResponse.json();
-  if (!adminPricePayload.admin_bound || adminPricePayload.admin_phone !== '13800138000') {
-    throw new Error('Expected admin price status to expose bound phone metadata');
+  if (!adminPricePayload.admin_bound ||
+      adminPricePayload.admin_phone !== '18189182920' ||
+      !adminPricePayload.authorized_phones.some(account => account.phone === '13800138000' && account.role === 'editor')) {
+    throw new Error('Expected admin price status to expose super admin and authorized editor metadata');
   }
 
   const afterSaveResponse = await edgeFunction.handleApiRequest(
@@ -254,7 +284,12 @@ function createLegacyBlob(initial = new Map()) {
     new Request('https://example.com/gold-api/admin/bind', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: '12345', password: 'abc123' }),
+      body: JSON.stringify({
+        admin_phone: '18189182920',
+        admin_password: 'owner123',
+        phone: '12345',
+        password: 'abc123',
+      }),
     }),
     dependencies
   );
@@ -296,11 +331,24 @@ function createLegacyBlob(initial = new Map()) {
     blob,
     now: () => new Date('2026-07-01T17:00:00+08:00'),
   };
+  await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '18189182920', password: 'owner123' }),
+    }),
+    blobDependencies
+  );
   const blobBindResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin/bind', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: '13900139000', password: 'blob123' }),
+      body: JSON.stringify({
+        admin_phone: '18189182920',
+        admin_password: 'owner123',
+        phone: '13900139000',
+        password: 'blob123',
+      }),
     }),
     blobDependencies
   );
@@ -339,11 +387,24 @@ function createLegacyBlob(initial = new Map()) {
     blob: legacyBlob,
     now: () => new Date('2026-07-01T17:30:00+08:00'),
   };
+  await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '18189182920', password: 'owner123' }),
+    }),
+    legacyDependencies
+  );
   const legacyBindResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin/bind', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: '13700137000', password: 'legacy123' }),
+      body: JSON.stringify({
+        admin_phone: '18189182920',
+        admin_password: 'owner123',
+        phone: '13700137000',
+        password: 'legacy123',
+      }),
     }),
     legacyDependencies
   );

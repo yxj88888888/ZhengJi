@@ -20,6 +20,7 @@ const YUEXIN_MARKUP_START_MINUTE = 15 * 60 + 30;
 const YUEXIN_MARKUP_END_MINUTE = 20 * 60;
 const DEFAULT_FIXED_SALE_PRICE = Number(process.env.ZHENGJI_DEFAULT_SALE_PRICE || 1130);
 const DEFAULT_FIXED_BUYBACK_PRICE = Number(process.env.ZHENGJI_DEFAULT_BUYBACK_PRICE || 1026.5);
+const SUPER_ADMIN_PHONE = '18189182920';
 
 // ========== 微信公众号配置 ==========
 const WECHAT_TOKEN = process.env.WECHAT_TOKEN || 'yuexin_token_2024';
@@ -109,50 +110,104 @@ function normalizeAdminAccount(raw) {
   if (!raw || typeof raw !== 'object') return null;
   if (!isValidAdminPhone(raw.phone) || !isValidAdminPassword(raw.password)) return null;
 
+  const phone = String(raw.phone).trim();
   return {
-    phone: String(raw.phone).trim(),
+    phone,
     password: String(raw.password),
+    role: phone === SUPER_ADMIN_PHONE || raw.role === 'super' ? 'super' : 'editor',
     created_at: raw.created_at || new Date().toISOString(),
     updated_at: raw.updated_at || raw.created_at || new Date().toISOString()
   };
 }
 
-function getAdminAccount() {
-  return normalizeAdminAccount(readJSON(ADMIN_ACCOUNT_FILE));
+function normalizeAdminAccounts(raw) {
+  const sourceAccounts = Array.isArray(raw && raw.accounts) ? raw.accounts : (raw && raw.phone ? [raw] : []);
+  const accounts = [];
+  const seen = new Set();
+
+  for (const sourceAccount of sourceAccounts) {
+    const account = normalizeAdminAccount(sourceAccount);
+    if (!account || seen.has(account.phone)) continue;
+    seen.add(account.phone);
+    accounts.push(account);
+  }
+
+  return accounts;
 }
 
-function saveAdminAccount(account) {
+function getAdminAccounts() {
+  return normalizeAdminAccounts(readJSON(ADMIN_ACCOUNT_FILE));
+}
+
+function saveAdminAccounts(accounts) {
+  const normalized = normalizeAdminAccounts({ accounts }).map(account => ({
+    ...account,
+    updated_at: new Date().toISOString()
+  }));
+  writeJSON(ADMIN_ACCOUNT_FILE, {
+    accounts: normalized,
+    updated_at: new Date().toISOString()
+  });
+  return normalized;
+}
+
+function upsertAdminAccount(existingAccounts, account) {
   const normalized = normalizeAdminAccount({
     ...account,
     updated_at: new Date().toISOString()
   });
   if (!normalized) return null;
-  writeJSON(ADMIN_ACCOUNT_FILE, normalized);
+
+  const nextAccounts = existingAccounts.filter(item => item.phone !== normalized.phone);
+  nextAccounts.push(normalized);
+  saveAdminAccounts(nextAccounts);
   return normalized;
 }
 
-function requireAccountMatch(account, body) {
-  if (!account) return '请先绑定手机号并设置密码';
-  if (String(body.phone || '').trim() !== account.phone || String(body.password || '') !== account.password) {
-    return '手机号或密码不正确';
-  }
-  return '';
-}
-
-function adminAccountPayload(account) {
+function adminAccountsPayload(accounts, activeAccount = null) {
+  const superAccount = accounts.find(account => account.role === 'super' || account.phone === SUPER_ADMIN_PHONE);
   return {
-    admin_bound: Boolean(account),
-    admin_phone: account ? account.phone : null
+    admin_bound: accounts.length > 0,
+    admin_phone: activeAccount ? activeAccount.phone : (superAccount ? superAccount.phone : null),
+    role: activeAccount ? activeAccount.role : null,
+    can_manage_users: Boolean(activeAccount && activeAccount.role === 'super'),
+    authorized_phones: accounts.map(account => ({
+      phone: account.phone,
+      role: account.role
+    }))
   };
 }
 
+function findAuthorizedAccount(accounts, phone, password) {
+  const normalizedPhone = String(phone || '').trim();
+  const normalizedPassword = String(password || '');
+  return accounts.find(account => account.phone === normalizedPhone && account.password === normalizedPassword) || null;
+}
+
+function requireAuthorizedAccount(accounts, body) {
+  if (!accounts.length) return { error: '\u8bf7\u5148\u7528\u6700\u9ad8\u6743\u9650\u624b\u673a\u53f7\u767b\u5f55\u5e76\u8bbe\u7f6e\u5bc6\u7801' };
+  const account = findAuthorizedAccount(accounts, body.phone, body.password);
+  if (!account) return { error: '\u624b\u673a\u53f7\u6216\u5bc6\u7801\u4e0d\u6b63\u786e' };
+  return { account };
+}
+
+function requireSuperAdminAccount(accounts, body) {
+  const account = findAuthorizedAccount(accounts, body.admin_phone || body.phone, body.admin_password || body.password);
+  if (!account || account.role !== 'super') {
+    return { error: '\u53ea\u6709\u6700\u9ad8\u6743\u9650\u8d26\u53f7\u53ef\u4ee5\u8bbe\u7f6e\u5176\u4ed6\u624b\u673a\u53f7\u6743\u9650' };
+  }
+  return { account };
+}
+
 function buildGoldAdminPage() {
+  const previewToken = '';
+  const previewTime = '';
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>西部郑记金价后台</title>
+<title>\u897f\u90e8\u90d1\u8bb0\u91d1\u4ef7\u540e\u53f0</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -166,7 +221,7 @@ function buildGoldAdminPage() {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
   }
   main {
-    width: min(92vw, 480px);
+    width: min(92vw, 500px);
     padding: 28px;
     border: 1px solid rgba(212, 165, 55, 0.34);
     border-radius: 12px;
@@ -174,19 +229,7 @@ function buildGoldAdminPage() {
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
   }
   h1 { margin: 0 0 18px; color: #f0d060; font-size: 24px; }
-  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
-  .tab {
-    border: 1px solid #2a2d3e;
-    border-radius: 8px;
-    background: #111522;
-    color: #b8b8c8;
-    padding: 10px;
-    font-weight: 800;
-    cursor: pointer;
-  }
-  .tab.active { background: #d4a537; color: #111; border-color: #d4a537; }
-  section { display: none; }
-  section.active { display: block; }
+  form[hidden], .admin-only[hidden] { display: none; }
   label { display: block; margin: 14px 0 6px; color: #b8b8c8; font-size: 14px; }
   input {
     width: 100%;
@@ -210,48 +253,39 @@ function buildGoldAdminPage() {
     font-weight: 800;
     cursor: pointer;
   }
+  .divider { height: 1px; margin: 22px 0 6px; background: rgba(212, 165, 55, 0.18); }
   .status { min-height: 22px; margin-top: 14px; color: #f0d060; font-size: 14px; }
   .muted { margin-top: 14px; color: #8f94a8; font-size: 13px; line-height: 1.6; }
 </style>
 </head>
 <body>
 <main>
-  <h1>西部郑记金价后台</h1>
-  <div class="tabs">
-    <button class="tab active" type="button" data-tab="login">登录修改</button>
-    <button class="tab" type="button" data-tab="bind">绑定手机</button>
-  </div>
-
-  <section class="active" id="panel-login">
+  <h1>\u897f\u90e8\u90d1\u8bb0\u91d1\u4ef7\u540e\u53f0</h1>
   <form id="login-form">
-    <label for="login-phone">手机号</label>
+    <label for="login-phone">\u624b\u673a\u53f7</label>
     <input id="login-phone" name="phone" inputmode="numeric" autocomplete="username" required>
-    <label for="login-password">密码</label>
+    <label for="login-password">\u5bc6\u7801</label>
     <input id="login-password" name="password" type="password" autocomplete="current-password" required>
-    <button class="submit" type="submit">登录后台</button>
+    <button class="submit" type="submit">\u767b\u5f55\u540e\u53f0</button>
   </form>
   <form id="login-price-form" hidden>
-    <div class="muted">已登录，可修改当前金价。</div>
-    <label for="sale-price">今日金价（元/克）</label>
+    <div class="muted">\u5df2\u767b\u5f55\uff0c\u53ef\u4fee\u6539\u5f53\u524d\u91d1\u4ef7\u3002</div>
+    <label for="sale-price">\u4eca\u65e5\u91d1\u4ef7\uff08\u5143/\u514b\uff09</label>
     <input id="sale-price" name="sale_price" inputmode="decimal" required>
-    <label for="buyback-price">回购金价（元/克）</label>
+    <label for="buyback-price">\u56de\u8d2d\u91d1\u4ef7\uff08\u5143/\u514b\uff09</label>
     <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
-    <button class="submit" type="submit">保存金价</button>
+    <button class="submit" type="submit">\u4fdd\u5b58\u91d1\u4ef7</button>
   </form>
-  </section>
-
-  <section id="panel-bind">
-  <form id="bind-form">
-    <label for="bind-phone">绑定手机号</label>
-    <input id="bind-phone" name="phone" inputmode="numeric" autocomplete="username" required>
-    <label for="bind-password">设置密码（至少 6 位）</label>
-    <input id="bind-password" name="password" type="password" autocomplete="new-password" required>
-    <button class="submit" type="submit">绑定并设置密码</button>
+  <form class="admin-only" id="grant-form" hidden>
+    <div class="divider"></div>
+    <div class="muted">\u6700\u9ad8\u6743\u9650\u8d26\u53f7\u53ef\u7ed9\u5176\u4ed6\u624b\u673a\u53f7\u8bbe\u7f6e\u767b\u5f55\u548c\u4fee\u6539\u91d1\u4ef7\u6743\u9650\u3002</div>
+    <label for="grant-phone">\u6388\u6743\u624b\u673a\u53f7</label>
+    <input id="grant-phone" name="phone" inputmode="numeric" autocomplete="off" required>
+    <label for="grant-password">\u8bbe\u7f6e\u5bc6\u7801\uff08\u81f3\u5c11 6 \u4f4d\uff09</label>
+    <input id="grant-password" name="password" type="password" autocomplete="new-password" required>
+    <button class="submit" type="submit">\u8bbe\u7f6e\u624b\u673a\u53f7\u6743\u9650</button>
   </form>
-  <div class="muted">首次使用请先绑定手机号。以后修改金价需要输入手机号和密码。</div>
-  </section>
-
-  <div class="status" id="status">正在读取当前金价...</div>
+  <div class="status" id="status">\u6b63\u5728\u8bfb\u53d6\u5f53\u524d\u91d1\u4ef7...</div>
   <div class="muted" id="account-status"></div>
 </main>
 <script>
@@ -259,20 +293,16 @@ const statusEl = document.getElementById('status');
 const accountStatusEl = document.getElementById('account-status');
 const loginForm = document.getElementById('login-form');
 const priceForm = document.getElementById('login-price-form');
+const grantForm = document.getElementById('grant-form');
 const saleInput = document.getElementById('sale-price');
 const buybackInput = document.getElementById('buyback-price');
-const edgeOnePreviewToken = '';
-const edgeOnePreviewTime = '';
+const edgeOnePreviewToken = ${JSON.stringify(previewToken)};
+const edgeOnePreviewTime = ${JSON.stringify(previewTime)};
 let loggedInPhone = '';
 let loggedInPassword = '';
 
 function setStatus(text) {
   statusEl.textContent = text;
-}
-
-function showPriceForm() {
-  loginForm.hidden = true;
-  priceForm.hidden = false;
 }
 
 function apiPath(path) {
@@ -289,55 +319,30 @@ async function requestJson(path, options) {
   try {
     return JSON.parse(text);
   } catch (error) {
-    throw new Error(response.status === 401 ? '临时链接已过期，请重新打开最新后台链接' : '接口返回异常');
+    throw new Error(response.status === 401 ? '\u4e34\u65f6\u94fe\u63a5\u5df2\u8fc7\u671f\uff0c\u8bf7\u91cd\u65b0\u6253\u5f00\u6700\u65b0\u540e\u53f0\u94fe\u63a5' : '\u63a5\u53e3\u8fd4\u56de\u5f02\u5e38');
   }
 }
 
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(item => item.classList.remove('active'));
-    document.querySelectorAll('section').forEach(panel => panel.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-  });
-});
+function showLoggedIn(json) {
+  loginForm.hidden = true;
+  priceForm.hidden = false;
+  grantForm.hidden = !json.can_manage_users;
+  accountStatusEl.textContent = json.can_manage_users
+    ? '\u5df2\u767b\u5f55\u6700\u9ad8\u6743\u9650\u8d26\u53f7\uff1a' + json.admin_phone
+    : '\u5df2\u767b\u5f55\u6388\u6743\u8d26\u53f7\uff1a' + json.admin_phone;
+}
 
 async function loadPrice() {
   const json = await requestJson('/gold-api/admin/price');
-  if (json.code !== 1) throw new Error(json.message || '读取失败');
+  if (json.code !== 1) throw new Error(json.message || '\u8bfb\u53d6\u5931\u8d25');
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
-  accountStatusEl.textContent = json.admin_bound ? '已绑定手机号：' + json.admin_phone : '尚未绑定手机号，请先绑定';
-  setStatus(json.admin_bound ? '请输入手机号和密码登录后台' : '首次使用请先绑定手机号');
+  setStatus('\u8bf7\u8f93\u5165\u624b\u673a\u53f7\u548c\u5bc6\u7801\u767b\u5f55\u540e\u53f0\u3002\u6700\u9ad8\u6743\u9650\u8d26\u53f7\uff1a18189182920');
 }
-
-document.getElementById('bind-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  setStatus('正在绑定...');
-  try {
-    const json = await requestJson('/gold-api/admin/bind', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phone: document.getElementById('bind-phone').value,
-        password: document.getElementById('bind-password').value,
-      }),
-    });
-    if (json.code !== 1) {
-      setStatus(json.message || '绑定失败');
-      return;
-    }
-    document.getElementById('login-phone').value = json.data.phone;
-    accountStatusEl.textContent = '已绑定手机号：' + json.data.phone;
-    setStatus('绑定成功，请返回登录后台后修改金价');
-  } catch (error) {
-    setStatus(error.message || '绑定失败');
-  }
-});
 
 document.getElementById('login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  setStatus('正在登录...');
+  setStatus('\u6b63\u5728\u767b\u5f55...');
   const phone = document.getElementById('login-phone').value;
   const password = document.getElementById('login-password').value;
   try {
@@ -347,24 +352,23 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
       body: JSON.stringify({ phone, password }),
     });
     if (json.code !== 1) {
-      setStatus(json.message || '登录失败');
+      setStatus(json.message || '\u767b\u5f55\u5931\u8d25');
       return;
     }
     loggedInPhone = phone;
     loggedInPassword = password;
     saleInput.value = json.data.sale_price;
     buybackInput.value = json.data.buyback_price;
-    showPriceForm();
-    accountStatusEl.textContent = '已登录手机号：' + json.admin_phone;
-    setStatus('登录成功，当前更新时间：' + json.data.update_time);
+    showLoggedIn(json);
+    setStatus('\u767b\u5f55\u6210\u529f\uff0c\u5f53\u524d\u66f4\u65b0\u65f6\u95f4\uff1a' + json.data.update_time);
   } catch (error) {
-    setStatus(error.message || '登录失败');
+    setStatus(error.message || '\u767b\u5f55\u5931\u8d25');
   }
 });
 
 document.getElementById('login-price-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  setStatus('正在保存...');
+  setStatus('\u6b63\u5728\u4fdd\u5b58...');
   try {
     const json = await requestJson('/gold-api/admin/price', {
       method: 'POST',
@@ -377,23 +381,48 @@ document.getElementById('login-price-form').addEventListener('submit', async (ev
       }),
     });
     if (json.code !== 1) {
-      setStatus(json.message || '保存失败');
+      setStatus(json.message || '\u4fdd\u5b58\u5931\u8d25');
       return;
     }
     saleInput.value = json.data.sale_price;
     buybackInput.value = json.data.buyback_price;
-    setStatus('已保存：' + json.data.update_time);
+    setStatus('\u5df2\u4fdd\u5b58\uff1a' + json.data.update_time);
   } catch (error) {
-    setStatus(error.message || '保存失败');
+    setStatus(error.message || '\u4fdd\u5b58\u5931\u8d25');
   }
 });
 
-loadPrice().catch(error => setStatus(error.message || '读取失败'));
+document.getElementById('grant-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setStatus('\u6b63\u5728\u8bbe\u7f6e\u624b\u673a\u53f7\u6743\u9650...');
+  try {
+    const json = await requestJson('/gold-api/admin/bind', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        admin_phone: loggedInPhone,
+        admin_password: loggedInPassword,
+        phone: document.getElementById('grant-phone').value,
+        password: document.getElementById('grant-password').value,
+      }),
+    });
+    if (json.code !== 1) {
+      setStatus(json.message || '\u8bbe\u7f6e\u5931\u8d25');
+      return;
+    }
+    document.getElementById('grant-phone').value = '';
+    document.getElementById('grant-password').value = '';
+    setStatus('\u5df2\u6388\u6743\u624b\u673a\u53f7\uff1a' + json.data.phone);
+  } catch (error) {
+    setStatus(error.message || '\u8bbe\u7f6e\u5931\u8d25');
+  }
+});
+
+loadPrice().catch(error => setStatus(error.message || '\u8bfb\u53d6\u5931\u8d25'));
 </script>
 </body>
 </html>`;
 }
-
 // ========== 数据存储 ==========
 let goldPriceHistory = [];      // 今日每秒数据（内存）
 let externalDataHistory = [];   // 今日外部数据（内存）
@@ -965,34 +994,44 @@ app.get('/gold-api/admin', (req, res) => {
 });
 
 app.get('/gold-api/admin/price', (req, res) => {
-  const account = getAdminAccount();
+  const accounts = getAdminAccounts();
   res.json({
     code: 1,
     data: fixedPricePayload(getFixedPrice()),
-    ...adminAccountPayload(account)
+    ...adminAccountsPayload(accounts)
   });
 });
 
 app.post('/gold-api/admin/login', (req, res) => {
-  const account = getAdminAccount();
-  const authError = requireAccountMatch(account, req.body);
-  if (authError) {
-    res.status(401).json({ code: 0, message: authError });
+  let accounts = getAdminAccounts();
+  let activeAccount = findAuthorizedAccount(accounts, req.body.phone, req.body.password);
+
+  if (!activeAccount && String(req.body.phone || '').trim() === SUPER_ADMIN_PHONE && isValidAdminPassword(req.body.password)) {
+    activeAccount = upsertAdminAccount(accounts, {
+      phone: SUPER_ADMIN_PHONE,
+      password: String(req.body.password),
+      role: 'super'
+    });
+    accounts = getAdminAccounts();
+  }
+
+  if (!activeAccount) {
+    res.status(401).json({ code: 0, message: '\u624b\u673a\u53f7\u6216\u5bc6\u7801\u4e0d\u6b63\u786e' });
     return;
   }
 
   res.json({
     code: 1,
     data: fixedPricePayload(getFixedPrice()),
-    ...adminAccountPayload(account)
+    ...adminAccountsPayload(accounts, activeAccount)
   });
 });
 
 app.post('/gold-api/admin/price', (req, res) => {
-  const account = getAdminAccount();
-  const authError = requireAccountMatch(account, req.body);
-  if (authError) {
-    res.status(401).json({ code: 0, message: authError });
+  const accounts = getAdminAccounts();
+  const auth = requireAuthorizedAccount(accounts, req.body);
+  if (auth.error) {
+    res.status(401).json({ code: 0, message: auth.error });
     return;
   }
 
@@ -1002,7 +1041,7 @@ app.post('/gold-api/admin/price', (req, res) => {
   });
 
   if (!saved) {
-    res.status(400).json({ code: 0, message: '请输入有效的今日金价和回购金价' });
+    res.status(400).json({ code: 0, message: '\u8bf7\u8f93\u5165\u6709\u6548\u7684\u4eca\u65e5\u91d1\u4ef7\u548c\u56de\u8d2d\u91d1\u4ef7' });
     return;
   }
 
@@ -1010,20 +1049,31 @@ app.post('/gold-api/admin/price', (req, res) => {
 });
 
 app.post('/gold-api/admin/bind', (req, res) => {
+  const accounts = getAdminAccounts();
+  const superAuth = requireSuperAdminAccount(accounts, req.body);
+  if (superAuth.error) {
+    res.status(401).json({ code: 0, message: superAuth.error });
+    return;
+  }
+
   const phone = String(req.body.phone || '').trim();
   const password = String(req.body.password || '');
 
   if (!isValidAdminPhone(phone)) {
-    res.status(400).json({ code: 0, message: '请输入有效手机号' });
+    res.status(400).json({ code: 0, message: '\u8bf7\u8f93\u5165\u6709\u6548\u624b\u673a\u53f7' });
     return;
   }
   if (!isValidAdminPassword(password)) {
-    res.status(400).json({ code: 0, message: '密码至少 6 位' });
+    res.status(400).json({ code: 0, message: '\u5bc6\u7801\u81f3\u5c11 6 \u4f4d' });
+    return;
+  }
+  if (phone === SUPER_ADMIN_PHONE) {
+    res.status(400).json({ code: 0, message: '\u6700\u9ad8\u6743\u9650\u8d26\u53f7\u4e0d\u9700\u8981\u91cd\u590d\u6388\u6743' });
     return;
   }
 
-  const account = saveAdminAccount({ phone, password });
-  res.json({ code: 1, data: { phone: account.phone } });
+  const account = upsertAdminAccount(accounts, { phone, password, role: 'editor' });
+  res.json({ code: 1, data: { phone: account.phone, role: account.role } });
 });
 
 // ========== 实名登记 ==========
