@@ -97,4 +97,21 @@ if (!/\.header-qr-subtitle\s*\{[\s\S]*display:\s*none/.test(portraitBlock)) {
   throw new Error('Portrait QR card should show the updated single-line copy only');
 }
 
+const tinyMarker = '@media (max-width: 480px)';
+const tinyStart = css.indexOf(tinyMarker);
+if (tinyStart === -1) {
+  throw new Error('Expected tiny mobile QR media query');
+}
+const tinyNext = css.indexOf('\n@media', tinyStart + tinyMarker.length);
+const tinyBlock = css.slice(tinyStart, tinyNext === -1 ? css.length : tinyNext);
+if (!/\.header-qr-card\s*\{[\s\S]*width:\s*clamp\(106px,\s*30vw,\s*126px\)[\s\S]*flex-direction:\s*column/.test(tinyBlock)) {
+  throw new Error('Tiny mobile QR prompt should stay inside a narrow vertical card');
+}
+if (!/\.header-qr-title\s*\{[\s\S]*font-size:\s*clamp\(11px,\s*3\.05vw,\s*13px\)/.test(tinyBlock)) {
+  throw new Error('Tiny mobile QR prompt text should shrink to avoid overlap');
+}
+if (!/\.header-qr-subtitle\s*\{[\s\S]*display:\s*none/.test(tinyBlock)) {
+  throw new Error('Tiny mobile QR card should not reserve subtitle space');
+}
+
 console.log('header QR module includes asset, text, and responsive styling');

@@ -36,8 +36,8 @@ if (/\.logo-title\s*\{[\s\S]*max-width:\s*2\.4em/.test(mobileBlock)) {
 }
 
 const tinyBlock = mediaBlock(480);
-if (!/\.header-qr-card\s*\{[\s\S]*width:\s*min\(58vw,\s*225px\)/.test(tinyBlock)) {
-  throw new Error('Tiny QR card should not exceed available viewport space');
+if (!/\.header-qr-card\s*\{[\s\S]*width:\s*clamp\(106px,\s*30vw,\s*126px\)[\s\S]*flex-direction:\s*column/.test(tinyBlock)) {
+  throw new Error('Tiny QR card should stay narrow and vertical to avoid overlapping the logo');
 }
 if (!/\.header-time\s*\{[\s\S]*font-size:\s*clamp\(14px,\s*4\.4vw,\s*21px\)/.test(tinyBlock)) {
   throw new Error('Tiny header time should shrink with viewport width');

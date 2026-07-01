@@ -505,20 +505,31 @@ body {
     gap: 7px 8px;
   }
   .header-qr-card {
-    width: min(58vw, 225px);
-    padding: 7px;
-    gap: 7px;
+    width: clamp(106px, 30vw, 126px);
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 6px;
+    gap: 5px;
   }
   .header-qr-placeholder {
-    width: clamp(54px, 17vw, 81px);
-    height: clamp(54px, 17vw, 81px);
-    flex-basis: clamp(54px, 17vw, 81px);
+    width: clamp(54px, 16vw, 66px);
+    height: clamp(54px, 16vw, 66px);
+    flex: 0 0 clamp(54px, 16vw, 66px);
+  }
+  .header-qr-copy {
+    flex: 0 0 auto;
+    align-self: center;
+    justify-content: flex-start;
+    width: 100%;
+    line-height: 1.1;
   }
   .header-qr-title {
-    font-size: clamp(16px, 4.8vw, 24px);
+    font-size: clamp(11px, 3.05vw, 13px);
   }
   .header-qr-subtitle {
-    font-size: clamp(12px, 3.8vw, 18px);
+    display: none;
   }
   .logo-section { gap: 7px; }
   .header-center {

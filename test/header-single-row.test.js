@@ -11,7 +11,15 @@ function mediaBlock(maxWidth) {
   return css.slice(start, next === -1 ? css.length : next);
 }
 
+function ruleInBlock(block, selector) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = block.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`, 'm'));
+  if (!match) throw new Error(`Missing ${selector} rule in media block`);
+  return match[1];
+}
+
 const mobileBlock = mediaBlock(768);
+const mobileHeaderInnerRule = ruleInBlock(mobileBlock, '.header-inner');
 if (!/\.header-inner\s*\{[\s\S]*display:\s*grid/.test(mobileBlock)) {
   throw new Error('Header should stay in a grid row on narrow screens');
 }
@@ -21,7 +29,7 @@ if (!/\.header-inner\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+au
 if (!/\.header-inner\s*\{[\s\S]*grid-template-areas:[\s\S]*"qr logo"[\s\S]*"time time"/.test(mobileBlock)) {
   throw new Error('Narrow header should put the time below QR and logo to avoid overlap');
 }
-if (/\.header-inner\s*\{[\s\S]*flex-direction:\s*column/.test(mobileBlock)) {
+if (/flex-direction:\s*column/.test(mobileHeaderInnerRule)) {
   throw new Error('Header must not stack QR and logo vertically on narrow screens');
 }
 if (!/\.header-center\s*\{[\s\S]*align-items:\s*center/.test(mobileBlock)) {
@@ -38,14 +46,15 @@ if (!/\.header-qr-card\s*\{[\s\S]*width:\s*min\(58vw,\s*285px\)/.test(mobileBloc
 }
 
 const tinyBlock = mediaBlock(480);
-if (/\.header-inner\s*\{[\s\S]*flex-direction:\s*column/.test(tinyBlock)) {
+const tinyHeaderInnerRule = ruleInBlock(tinyBlock, '.header-inner');
+if (/flex-direction:\s*column/.test(tinyHeaderInnerRule)) {
   throw new Error('Tiny header must not stack QR and logo vertically');
 }
 if (!/\.header-inner\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto/.test(tinyBlock)) {
   throw new Error('Tiny header should still use a flexible two-column row');
 }
-if (!/\.header-qr-card\s*\{[\s\S]*width:\s*min\(58vw,\s*225px\)/.test(tinyBlock)) {
-  throw new Error('Tiny header should shrink QR card further with viewport');
+if (!/\.header-qr-card\s*\{[\s\S]*width:\s*clamp\(106px,\s*30vw,\s*126px\)[\s\S]*flex-direction:\s*column/.test(tinyBlock)) {
+  throw new Error('Tiny header should keep the QR prompt inside a narrow vertical card');
 }
 if (!/\.header-center\s*\{[\s\S]*transform:\s*none/.test(tinyBlock)) {
   throw new Error('Tiny header should avoid manual offsets');
