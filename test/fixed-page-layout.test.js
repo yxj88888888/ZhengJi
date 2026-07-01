@@ -43,6 +43,26 @@ if (!/flex\s*:\s*0\s+1\s+auto/.test(carouselRule) ||
   throw new Error('Certificate carousel should align with the price card while staying compact');
 }
 
+const portraitMarker = '@media (orientation: portrait) and (min-width: 600px) and (max-aspect-ratio: 3/4)';
+const portraitStart = css.indexOf(portraitMarker);
+if (portraitStart === -1) {
+  throw new Error('Expected a 9:16 portrait layout media query');
+}
+const portraitNext = css.indexOf('\n@media', portraitStart + portraitMarker.length);
+const portraitBlock = css.slice(portraitStart, portraitNext === -1 ? css.length : portraitNext);
+if (!/\.price-combo-card\s*\{[\s\S]*grid-template-columns:\s*1fr/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should stack the two price cards');
+}
+if (!/\.certificate-carousel\s*\{[\s\S]*flex:\s*1\s+1\s+auto[\s\S]*aspect-ratio:\s*auto[\s\S]*height:\s*clamp\(320px,\s*40vh,\s*820px\)/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should size certificate display from available height');
+}
+if (!/\.header-address\s*\{[\s\S]*transform:\s*none/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should keep the address in normal flow');
+}
+if (!/\.admin-entry-link\s*\{[\s\S]*top:\s*clamp\(126px,\s*10\.6vh,\s*180px\)[\s\S]*bottom:\s*auto/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should keep the admin entry clear of market content');
+}
+
 const noteRule = ruleFor('.fixed-price-note');
 if (/position\s*:\s*fixed/.test(noteRule) || !/flex\s*:\s*0\s+0\s+auto/.test(noteRule)) {
   throw new Error('Bottom note should live inside the fixed one-page layout, not overlay it');
