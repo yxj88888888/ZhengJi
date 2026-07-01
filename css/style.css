@@ -36,7 +36,7 @@ body {
 .header-bar {
   background: linear-gradient(135deg, #1a1d2e 0%, #0d0f1a 100%);
   border-bottom: 1px solid rgba(212, 165, 55, 0.2);
-  padding: 21px 36px 18px;
+  padding: clamp(10px, 1.6vw, 21px) clamp(12px, 2.8vw, 36px) clamp(10px, 1.4vw, 18px);
   flex: 0 0 auto;
   position: relative;
   z-index: 100;
@@ -45,9 +45,9 @@ body {
 .header-inner {
   max-width: 1800px; margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(330px, 1fr) auto minmax(330px, 1fr);
+  grid-template-columns: minmax(260px, 1fr) auto minmax(260px, 1fr);
   align-items: center;
-  gap: 27px;
+  gap: clamp(12px, 2.1vw, 27px);
 }
 .header-center {
   display: flex;
@@ -57,29 +57,29 @@ body {
   gap: 9px;
 }
 .header-spacer {
-  min-width: 330px;
+  min-width: 260px;
 }
 .header-qr-card {
   justify-self: start;
   display: flex;
   align-items: center;
-  gap: 15px;
-  width: 363px;
-  min-height: 162px;
-  padding: 15px 18px 15px 15px;
+  gap: clamp(8px, 1.2vw, 15px);
+  width: clamp(220px, 28vw, 363px);
+  min-height: clamp(92px, 12.5vw, 162px);
+  padding: clamp(8px, 1.15vw, 15px) clamp(10px, 1.4vw, 18px) clamp(8px, 1.15vw, 15px) clamp(8px, 1.15vw, 15px);
   border: 1px solid rgba(212, 165, 55, 0.28);
   border-radius: 12px;
   background: rgba(22, 24, 34, 0.72);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
 .header-qr-img {
-  width: 132px;
-  height: 132px;
-  flex: 0 0 132px;
+  width: clamp(74px, 10vw, 132px);
+  height: clamp(74px, 10vw, 132px);
+  flex: 0 0 clamp(74px, 10vw, 132px);
   object-fit: cover;
   border-radius: 10px;
   background: #fff;
-  padding: 5px;
+  padding: clamp(3px, 0.45vw, 5px);
 }
 .header-qr-copy {
   flex: 1;
@@ -93,24 +93,24 @@ body {
 }
 .header-qr-title {
   color: var(--gold-light);
-  font-size: 33px;
+  font-size: clamp(20px, 2.55vw, 33px);
   font-weight: 800;
   white-space: nowrap;
 }
 .header-qr-subtitle {
-  margin-top: 8px;
+  margin-top: clamp(3px, 0.6vw, 8px);
   color: var(--text-secondary);
-  font-size: 26px;
+  font-size: clamp(15px, 2vw, 26px);
   white-space: nowrap;
 }
 .logo-section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: clamp(10px, 1.8vw, 24px);
 }
 .logo-circle {
-  width: 90px; height: 90px;
+  width: clamp(58px, 7vw, 90px); height: clamp(58px, 7vw, 90px);
   border-radius: 50%; overflow: hidden;
   border: 3px solid var(--gold-primary);
   box-shadow: 0 0 36px rgba(212, 165, 55, 0.35);
@@ -123,22 +123,27 @@ body {
   background: linear-gradient(135deg, #b8860b, #d4a537);
   color: #fff; font-weight: bold; font-size: 30px; line-height: 1.3;
 }
-.logo-title { font-size: 39px; font-weight: 700; color: var(--gold-primary); letter-spacing: 3px; }
-.logo-subtitle { font-size: 20px; color: var(--text-secondary); letter-spacing: 2px; }
+.logo-title {
+  font-size: clamp(27px, 3vw, 39px);
+  font-weight: 700;
+  color: var(--gold-primary);
+  letter-spacing: clamp(1px, 0.24vw, 3px);
+  white-space: nowrap;
+}
 .header-time {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 21px;
+  padding: clamp(5px, 0.65vw, 8px) clamp(10px, 1.6vw, 21px);
   border: 1px solid rgba(212, 165, 55, 0.34);
   border-radius: 999px;
   background: rgba(212, 165, 55, 0.08);
   color: #f0d060;
-  font-size: 30px;
+  font-size: clamp(18px, 2.35vw, 30px);
   font-weight: 700;
   text-align: center;
   align-self: center;
-  letter-spacing: 2px;
+  letter-spacing: clamp(1px, 0.16vw, 2px);
   line-height: 1.2;
   font-variant-numeric: tabular-nums; font-family: 'Courier New', monospace;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -340,57 +345,97 @@ body {
   .price-card { padding: 18px 28px; }
   .price-label { font-size: 21px; }
 }
+@media (max-width: 900px) {
+  .header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "qr logo"
+      "qr time";
+    justify-content: stretch;
+    gap: 10px 16px;
+  }
+  .header-qr-card {
+    grid-area: qr;
+    width: min(42vw, 285px);
+    min-height: 0;
+    justify-self: start;
+  }
+  .header-center {
+    grid-area: logo;
+    align-items: center;
+    justify-self: end;
+    gap: 6px;
+  }
+  .header-time {
+    grid-area: time;
+    justify-self: end;
+    max-width: 100%;
+    white-space: nowrap;
+  }
+  .header-spacer {
+    display: none;
+  }
+}
 @media (max-width: 768px) {
   .header-inner {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    justify-content: center;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "qr logo"
+      "time time";
+    justify-content: stretch;
     align-items: center;
-    gap: 21px;
+    gap: 8px 12px;
   }
   .header-qr-card {
     display: flex;
-    justify-self: end;
-    width: 285px;
-    min-height: 123px;
-    padding: 12px;
-    gap: 12px;
+    grid-area: qr;
+    justify-self: start;
+    width: min(58vw, 285px);
+    min-height: 0;
+    padding: 10px;
+    gap: 10px;
   }
   .header-qr-img {
-    width: 99px;
-    height: 99px;
-    flex-basis: 99px;
+    width: clamp(66px, 18vw, 99px);
+    height: clamp(66px, 18vw, 99px);
+    flex-basis: clamp(66px, 18vw, 99px);
   }
   .header-qr-title {
-    font-size: 29px;
+    font-size: clamp(18px, 5vw, 29px);
   }
   .header-qr-subtitle {
-    margin-top: 5px;
-    font-size: 23px;
+    margin-top: 4px;
+    font-size: clamp(14px, 4vw, 23px);
   }
   .header-center {
+    grid-area: logo;
     align-items: center;
+    justify-self: end;
     min-width: 0;
-    transform: translateX(15px);
+    transform: none;
   }
   .logo-section {
     justify-content: center;
-    gap: 15px;
+    gap: 10px;
   }
   .logo-circle {
-    width: 78px;
-    height: 78px;
+    width: clamp(52px, 14vw, 78px);
+    height: clamp(52px, 14vw, 78px);
   }
   .logo-title {
-    font-size: 33px;
-  }
-  .logo-subtitle {
-    font-size: 18px;
+    font-size: clamp(24px, 6vw, 33px);
+    white-space: normal;
+    line-height: 1.08;
+    text-align: center;
+    max-width: 2.4em;
   }
   .header-time {
+    grid-area: time;
+    justify-self: center;
     max-width: 100%;
-    padding: 6px 15px;
-    font-size: 26px;
+    padding: 5px 12px;
+    font-size: clamp(17px, 4.8vw, 26px);
     white-space: nowrap;
     align-self: center;
   }
@@ -418,48 +463,44 @@ body {
   }
 }
 @media (max-width: 480px) {
-  .header-bar { padding: 15px 12px; }
+  .header-bar { padding: 10px 8px; }
   .header-inner {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px 8px;
   }
   .header-qr-card {
-    width: 225px;
-    min-height: 102px;
-    padding: 9px;
-    gap: 9px;
+    width: min(58vw, 225px);
+    padding: 7px;
+    gap: 7px;
   }
   .header-qr-img {
-    width: 81px;
-    height: 81px;
-    flex-basis: 81px;
+    width: clamp(54px, 17vw, 81px);
+    height: clamp(54px, 17vw, 81px);
+    flex-basis: clamp(54px, 17vw, 81px);
   }
   .header-qr-title {
-    font-size: 24px;
+    font-size: clamp(16px, 4.8vw, 24px);
   }
   .header-qr-subtitle {
-    font-size: 18px;
+    font-size: clamp(12px, 3.8vw, 18px);
   }
-  .logo-section { gap: 11px; }
+  .logo-section { gap: 7px; }
   .header-center {
-    transform: translateX(9px);
+    transform: none;
   }
   .logo-circle {
-    width: 66px;
-    height: 66px;
+    width: clamp(44px, 13vw, 66px);
+    height: clamp(44px, 13vw, 66px);
   }
   .logo-title {
-    font-size: 29px;
-    letter-spacing: 2px;
-  }
-  .logo-subtitle {
-    font-size: 15px;
-    letter-spacing: 0;
+    font-size: clamp(19px, 5.8vw, 29px);
+    letter-spacing: 1px;
+    max-width: 2.2em;
   }
   .header-time {
-    padding: 5px 11px;
-    font-size: 21px;
-    letter-spacing: 2px;
+    padding: 4px 9px;
+    font-size: clamp(14px, 4.4vw, 21px);
+    letter-spacing: 1px;
   }
   .price-value { font-size: 54px; }
   .price-label { font-size: 27px; letter-spacing: 1px; }
