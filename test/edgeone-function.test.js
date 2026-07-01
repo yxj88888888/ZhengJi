@@ -37,6 +37,18 @@ function createKv(initial = new Map()) {
   };
 }
 
+function createBlob(initial = new Map()) {
+  return {
+    values: initial,
+    async get(key) {
+      return this.values.get(key) || null;
+    },
+    async put(key, value) {
+      this.values.set(key, value);
+    },
+  };
+}
+
 (async () => {
   const moduleUrl = pathToFileURL(functionPath).href + `?t=${Date.now()}`;
   const edgeFunction = await import(moduleUrl);
@@ -214,6 +226,49 @@ function createKv(initial = new Map()) {
       healthPayload.admin_key !== 'zhengji_gold_admin_account' ||
       !healthPayload.admin_bound) {
     throw new Error('Expected health endpoint to describe fixed-price mode and admin binding');
+  }
+
+  const blob = createBlob();
+  const blobDependencies = {
+    blob,
+    now: () => new Date('2026-07-01T17:00:00+08:00'),
+  };
+  const blobBindResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/bind', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13900139000', password: 'blob123' }),
+    }),
+    blobDependencies
+  );
+  if (blobBindResponse.status !== 200 || !blob.values.has('zhengji_gold_admin_account')) {
+    throw new Error('Expected Blob fallback to persist the admin account');
+  }
+
+  const blobSaveResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/price', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: '13900139000',
+        password: 'blob123',
+        sale_price: '1177.00',
+        buyback_price: '1066.00',
+      }),
+    }),
+    blobDependencies
+  );
+  if (blobSaveResponse.status !== 200 || !blob.values.has('zhengji_gold_fixed_current')) {
+    throw new Error('Expected Blob fallback to persist the fixed price');
+  }
+
+  const blobHealthResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/health'),
+    blobDependencies
+  );
+  const blobHealthPayload = await blobHealthResponse.json();
+  if (blobHealthPayload.storage !== 'blob' || blobHealthPayload.kv !== 'disabled') {
+    throw new Error('Expected health endpoint to report Blob fallback storage');
   }
 
   console.log('EdgeOne function supports phone-bound admin price updates');

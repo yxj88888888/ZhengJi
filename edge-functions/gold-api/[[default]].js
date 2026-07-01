@@ -14,6 +14,48 @@ function getKvStore(dependencies = {}) {
   return null;
 }
 
+function getBlobStore(dependencies = {}) {
+  if (dependencies.blob) return dependencies.blob;
+  if (typeof getStore === 'function') return getStore('zhengji_gold_store');
+  if (typeof globalThis.getStore === 'function') return globalThis.getStore('zhengji_gold_store');
+  return null;
+}
+
+function createStorage(dependencies = {}) {
+  const kv = getKvStore(dependencies);
+  if (kv) {
+    return {
+      type: 'kv',
+      async get(key) {
+        return kv.get(key, { type: 'json' });
+      },
+      async put(key, value) {
+        await kv.put(key, JSON.stringify(value));
+      },
+    };
+  }
+
+  const blob = getBlobStore(dependencies);
+  if (blob) {
+    return {
+      type: 'blob',
+      async get(key) {
+        const value = await blob.get(key);
+        if (!value) return null;
+        if (typeof value === 'string') return JSON.parse(value);
+        if (typeof value.json === 'function') return value.json();
+        if (typeof value.text === 'function') return JSON.parse(await value.text());
+        return value;
+      },
+      async put(key, value) {
+        await blob.put(key, JSON.stringify(value));
+      },
+    };
+  }
+
+  return null;
+}
+
 function getKvDebug(dependencies = {}) {
   const env = dependencies.env || {};
   return {
@@ -21,6 +63,7 @@ function getKvDebug(dependencies = {}) {
     env_zhengji_gold_kv: Boolean(env.ZHENGJI_GOLD_KV),
     bare_zhengji_gold_kv: typeof ZHENGJI_GOLD_KV !== 'undefined',
     global_zhengji_gold_kv: Boolean(globalThis.ZHENGJI_GOLD_KV),
+    blob_store: Boolean(getBlobStore(dependencies)),
   };
 }
 
@@ -84,9 +127,9 @@ function normalizeAdminAccount(raw) {
   };
 }
 
-async function loadFixedPrice(kv, dependencies, now) {
-  if (kv) {
-    const saved = await kv.get(FIXED_PRICE_KEY, { type: 'json' });
+async function loadFixedPrice(storage, dependencies, now) {
+  if (storage) {
+    const saved = await storage.get(FIXED_PRICE_KEY);
     const normalized = normalizePrice(saved, now);
     if (normalized) {
       memoryPrice = normalized;
@@ -100,19 +143,19 @@ async function loadFixedPrice(kv, dependencies, now) {
   return memoryPrice;
 }
 
-async function saveFixedPrice(kv, price) {
+async function saveFixedPrice(storage, price) {
   memoryPrice = price;
-  if (kv) {
-    await kv.put(FIXED_PRICE_KEY, JSON.stringify({
+  if (storage) {
+    await storage.put(FIXED_PRICE_KEY, {
       ...price,
       saved_at: new Date().toISOString(),
-    }));
+    });
   }
 }
 
-async function loadAdminAccount(kv) {
-  if (kv) {
-    const saved = await kv.get(ADMIN_ACCOUNT_KEY, { type: 'json' });
+async function loadAdminAccount(storage) {
+  if (storage) {
+    const saved = await storage.get(ADMIN_ACCOUNT_KEY);
     const normalized = normalizeAdminAccount(saved);
     if (normalized) {
       memoryAdminAccount = normalized;
@@ -123,7 +166,7 @@ async function loadAdminAccount(kv) {
   return memoryAdminAccount;
 }
 
-async function saveAdminAccount(kv, account) {
+async function saveAdminAccount(storage, account) {
   const normalized = normalizeAdminAccount({
     ...account,
     updated_at: new Date().toISOString(),
@@ -131,7 +174,7 @@ async function saveAdminAccount(kv, account) {
   if (!normalized) return null;
 
   memoryAdminAccount = normalized;
-  if (kv) await kv.put(ADMIN_ACCOUNT_KEY, JSON.stringify(normalized));
+  if (storage) await storage.put(ADMIN_ACCOUNT_KEY, normalized);
   return normalized;
 }
 
@@ -375,19 +418,20 @@ function requireAccountMatch(account, body) {
 export async function handleApiRequest(request, dependencies = {}) {
   const url = new URL(request.url);
   const now = dependencies.now ? dependencies.now() : new Date();
-  const kv = getKvStore(dependencies);
+  const storage = createStorage(dependencies);
 
   try {
     if (url.pathname === '/gold-api/health' || url.pathname === '/api/health') {
-      const price = await loadFixedPrice(kv, dependencies, now);
-      const account = await loadAdminAccount(kv);
+      const price = await loadFixedPrice(storage, dependencies, now);
+      const account = await loadAdminAccount(storage);
       return json({
         status: 'ok',
         runtime: 'edgeone-edge-functions',
         mode: 'fixed-price',
         current_price: publicPricePayload(price),
         ...accountStatusPayload(account),
-        kv: kv ? 'enabled' : 'disabled',
+        kv: storage && storage.type === 'kv' ? 'enabled' : 'disabled',
+        storage: storage ? storage.type : 'memory',
         kv_key: FIXED_PRICE_KEY,
         admin_key: ADMIN_ACCOUNT_KEY,
         kv_debug: url.searchParams.get('debug') === 'kv' ? getKvDebug(dependencies) : undefined,
@@ -396,12 +440,12 @@ export async function handleApiRequest(request, dependencies = {}) {
     }
 
     if (url.pathname === '/gold-api/gold/current' || url.pathname === '/api/gold/current') {
-      const price = await loadFixedPrice(kv, dependencies, now);
+      const price = await loadFixedPrice(storage, dependencies, now);
       return json({ code: 1, data: publicPricePayload(price) });
     }
 
     if (url.pathname === '/gold-api/gold/history' || url.pathname === '/api/gold/history') {
-      const price = await loadFixedPrice(kv, dependencies, now);
+      const price = await loadFixedPrice(storage, dependencies, now);
       return json({
         code: 1,
         data: [{
@@ -417,10 +461,10 @@ export async function handleApiRequest(request, dependencies = {}) {
     }
 
     if (url.pathname === '/gold-api/admin/price') {
-      const account = await loadAdminAccount(kv);
+      const account = await loadAdminAccount(storage);
 
       if (request.method === 'GET') {
-        const price = await loadFixedPrice(kv, dependencies, now);
+        const price = await loadFixedPrice(storage, dependencies, now);
         return json({
           code: 1,
           data: publicPricePayload(price),
@@ -444,7 +488,7 @@ export async function handleApiRequest(request, dependencies = {}) {
           return json({ code: 0, message: '请输入有效的今日金价和回购金价' }, 400);
         }
 
-        await saveFixedPrice(kv, price);
+        await saveFixedPrice(storage, price);
         return json({ code: 1, data: publicPricePayload(price) });
       }
 
@@ -467,7 +511,7 @@ export async function handleApiRequest(request, dependencies = {}) {
         return json({ code: 0, message: '密码至少 6 位' }, 400);
       }
 
-      const account = await saveAdminAccount(kv, { phone, password });
+      const account = await saveAdminAccount(storage, { phone, password });
       return json({ code: 1, data: { phone: account.phone } });
     }
 
