@@ -94,6 +94,11 @@ function createLegacyBlob(initial = new Map()) {
   if (adminPageResponse.status !== 200 || !adminHtml.includes('绑定手机号') || !adminHtml.includes('设置密码')) {
     throw new Error('Expected admin page to render phone binding and password setup');
   }
+  if (!adminHtml.includes('id="login-form"') ||
+      !adminHtml.includes('id="login-price-form" hidden') ||
+      !adminHtml.includes('/gold-api/admin/login')) {
+    throw new Error('Expected admin page to hide price editor until login succeeds');
+  }
 
   const unboundSaveResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin/price', {
@@ -129,6 +134,25 @@ function createLegacyBlob(initial = new Map()) {
   }
   if (!kv.values.has('zhengji_gold_admin_account')) {
     throw new Error('Expected admin account to be saved under the ZhengJi admin KV key');
+  }
+
+  const loginResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: '13800138000',
+        password: 'abc123',
+      }),
+    }),
+    dependencies
+  );
+  const loginPayload = await loginResponse.json();
+  if (loginResponse.status !== 200 ||
+      loginPayload.code !== 1 ||
+      loginPayload.admin_phone !== '13800138000' ||
+      loginPayload.data.sale_price !== '1130.00') {
+    throw new Error('Expected valid admin login to return current editable prices');
   }
 
   const wrongPasswordResponse = await edgeFunction.handleApiRequest(
