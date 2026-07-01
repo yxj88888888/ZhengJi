@@ -83,18 +83,38 @@ function startPolling() {
 }
 
 function startCertificateCarousel() {
-  const slides = Array.from(document.querySelectorAll('.certificate-slide'));
-  if (slides.length <= 1) return;
-
   const track = document.getElementById('certificate-track');
   if (!track) return;
 
+  const slides = Array.from(track.querySelectorAll('.certificate-slide'));
+  if (slides.length <= 1) return;
+
+  slides.forEach((slide) => {
+    const clone = slide.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    track.appendChild(clone);
+  });
+
   let currentIndex = 0;
+  let isResetting = false;
 
   setInterval(() => {
-    currentIndex = (currentIndex + 1) % slides.length;
+    if (isResetting) return;
+    currentIndex += 1;
     track.style.transform = `translateX(-${currentIndex * 100}%)`;
   }, 3000);
+
+  track.addEventListener('transitionend', () => {
+    if (currentIndex < slides.length) return;
+
+    isResetting = true;
+    track.style.transition = 'none';
+    currentIndex = 0;
+    track.style.transform = 'translateX(0)';
+    void track.offsetWidth;
+    track.style.transition = '';
+    isResetting = false;
+  });
 }
 
 (async function bootstrap() {
