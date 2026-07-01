@@ -28,8 +28,11 @@ const mobileBlock = mediaBlock(768);
 if (!/grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"time time"/.test(mobileBlock)) {
   throw new Error('Mobile header should give the time a full row');
 }
-if (!/\.logo-title\s*\{[\s\S]*max-width:\s*2\.4em/.test(mobileBlock)) {
-  throw new Error('Mobile logo title should be allowed to wrap compactly');
+if (!/\.logo-title\s*\{[\s\S]*white-space:\s*nowrap/.test(css)) {
+  throw new Error('Mobile logo title should stay on one line');
+}
+if (/\.logo-title\s*\{[\s\S]*max-width:\s*2\.4em/.test(mobileBlock)) {
+  throw new Error('Mobile logo title should not be constrained to wrap');
 }
 
 const tinyBlock = mediaBlock(480);

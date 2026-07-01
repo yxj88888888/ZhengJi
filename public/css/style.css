@@ -55,6 +55,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 9px;
+  min-width: max-content;
 }
 .header-spacer {
   min-width: 260px;
@@ -72,14 +73,14 @@ body {
   background: rgba(22, 24, 34, 0.72);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
-.header-qr-img {
+.header-qr-placeholder {
   width: clamp(74px, 10vw, 132px);
   height: clamp(74px, 10vw, 132px);
   flex: 0 0 clamp(74px, 10vw, 132px);
-  object-fit: cover;
   border-radius: 10px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.06);
   padding: clamp(3px, 0.45vw, 5px);
+  border: 1px dashed rgba(212, 165, 55, 0.34);
 }
 .header-qr-copy {
   flex: 1;
@@ -145,8 +146,19 @@ body {
   align-self: center;
   letter-spacing: clamp(1px, 0.16vw, 2px);
   line-height: 1.2;
+  white-space: nowrap;
+  flex-shrink: 0;
   font-variant-numeric: tabular-nums; font-family: 'Courier New', monospace;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.header-address {
+  color: #fff;
+  font-size: clamp(17px, 2.8vw, 24px);
+  font-weight: 800;
+  line-height: 1.05;
+  text-align: center;
+  transform: translateY(10px);
+  white-space: nowrap;
 }
 
 /* ===== 涓诲鍣?===== */
@@ -284,10 +296,10 @@ body {
   animation: priceTickDown 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .certificate-carousel {
-  width: min(760px, calc(100vw - 56px));
-  height: auto;
+  width: 100%;
+  aspect-ratio: 2.12;
   min-height: 0;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   margin: 16px auto 0;
   border: 1px solid rgba(212, 165, 55, 0.28);
   border-radius: 14px;
@@ -326,10 +338,6 @@ body {
   font-weight: 700;
   letter-spacing: 1px;
 }
-.fixed-price-note i {
-  color: var(--gold-primary);
-}
-
 .admin-entry-link {
   position: fixed;
   right: clamp(12px, 2vw, 28px);
@@ -338,25 +346,26 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 15px;
-  border: 1px solid rgba(212, 165, 55, 0.42);
-  border-radius: 999px;
-  background: rgba(17, 21, 34, 0.86);
-  color: var(--gold-light);
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1;
+  width: clamp(48px, 7vw, 64px);
+  height: clamp(48px, 7vw, 64px);
+  padding: 4px;
+  border: 2px solid var(--gold-primary);
+  border-radius: 50%;
+  background: #fff;
   text-decoration: none;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26), 0 0 22px rgba(212, 165, 55, 0.28);
   backdrop-filter: blur(8px);
+  overflow: hidden;
 }
 .admin-entry-link:hover {
-  background: rgba(212, 165, 55, 0.16);
-  border-color: var(--gold-primary);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3), 0 0 28px rgba(212, 165, 55, 0.42);
 }
-.admin-entry-link i {
-  color: var(--gold-primary);
+.admin-entry-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 /* ===== 椤甸潰鍒囨崲 ===== */
@@ -394,6 +403,7 @@ body {
     align-items: center;
     justify-self: end;
     gap: 6px;
+    min-width: 0;
   }
   .header-time {
     grid-area: time;
@@ -425,7 +435,7 @@ body {
     padding: 10px;
     gap: 10px;
   }
-  .header-qr-img {
+  .header-qr-placeholder {
     width: clamp(66px, 18vw, 99px);
     height: clamp(66px, 18vw, 99px);
     flex-basis: clamp(66px, 18vw, 99px);
@@ -454,10 +464,8 @@ body {
   }
   .logo-title {
     font-size: clamp(24px, 6vw, 33px);
-    white-space: normal;
     line-height: 1.08;
     text-align: center;
-    max-width: 2.4em;
   }
   .header-time {
     grid-area: time;
@@ -480,15 +488,14 @@ body {
     border-left: 0;
     border-top: 1px solid rgba(212, 165, 55, 0.12);
   }
-  .price-value { font-size: 69px; }
-  .price-card { padding: 18px 18px; }
-  .price-label { font-size: 30px; margin-bottom: 10px; }
-  .price-label::before { width: 10px; height: 36px; }
+  .price-value { font-size: 82px; }
+  .price-card { padding: 22px 22px; }
+  .price-label { font-size: 34px; margin-bottom: 12px; }
+  .price-label::before { width: 11px; height: 40px; }
   .price-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-  .price-unit { font-size: 30px; }
+  .price-unit { font-size: 34px; }
   .certificate-carousel {
-    width: calc(100vw - 16px);
-    margin-top: 12px;
+    margin-top: 10px;
   }
 }
 @media (max-width: 480px) {
@@ -502,7 +509,7 @@ body {
     padding: 7px;
     gap: 7px;
   }
-  .header-qr-img {
+  .header-qr-placeholder {
     width: clamp(54px, 17vw, 81px);
     height: clamp(54px, 17vw, 81px);
     flex-basis: clamp(54px, 17vw, 81px);
@@ -524,24 +531,26 @@ body {
   .logo-title {
     font-size: clamp(19px, 5.8vw, 29px);
     letter-spacing: 1px;
-    max-width: 2.2em;
   }
   .header-time {
     padding: 4px 9px;
     font-size: clamp(14px, 4.4vw, 21px);
     letter-spacing: 1px;
   }
-  .price-value { font-size: 54px; }
-  .price-label { font-size: 27px; letter-spacing: 1px; }
-  .price-label::before { width: 9px; height: 32px; }
+  .header-address {
+    font-size: clamp(11px, 2.9vw, 14px);
+    transform: translateY(5px);
+  }
+  .price-value { font-size: 60px; }
+  .price-label { font-size: 29px; letter-spacing: 1px; }
+  .price-label::before { width: 10px; height: 35px; }
   .main-container { padding: 8px; }
   .price-hero { margin-bottom: 8px; }
-  .price-card { padding: 14px 12px; }
+  .price-card { padding: 16px 12px; }
   .price-row { gap: 6px; }
-  .price-unit { font-size: 24px; }
+  .price-unit { font-size: 26px; }
   .certificate-carousel {
-    width: calc(100vw - 16px);
-    margin-top: 10px;
+    margin-top: 8px;
   }
   .certificate-slide {
     padding: 6px;
@@ -553,8 +562,8 @@ body {
   .admin-entry-link {
     right: 8px;
     bottom: 8px;
-    padding: 9px 11px;
-    font-size: 12px;
+    width: 48px;
+    height: 48px;
   }
 }
 

@@ -40,4 +40,10 @@ if (!app.includes('function startCertificateCarousel()') ||
   throw new Error('Expected automatic horizontal rolling certificate carousel script');
 }
 
+if (!app.includes('cloneNode(true)') ||
+    !app.includes("track.addEventListener('transitionend'") ||
+    !app.includes("track.style.transition = 'none'")) {
+  throw new Error('Expected certificate carousel to loop seamlessly by appending cloned slides');
+}
+
 console.log('certificate carousel includes all qualification images and rolls horizontally');

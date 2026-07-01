@@ -207,7 +207,7 @@ function buildGoldAdminPage() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>\u897f\u90e8\u90d1\u8bb0\u91d1\u4ef7\u540e\u53f0</title>
+<title>\u91d1\u4ef7\u540e\u53f0</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -229,6 +229,29 @@ function buildGoldAdminPage() {
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
   }
   h1 { margin: 0 0 18px; color: #f0d060; font-size: 24px; }
+  .back-home-link {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 10px 14px;
+    border: 1px solid rgba(212, 165, 55, 0.42);
+    border-radius: 999px;
+    background: rgba(26, 29, 46, 0.86);
+    color: #f0d060;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  }
+  .back-home-link:hover {
+    background: rgba(212, 165, 55, 0.16);
+    border-color: #d4a537;
+  }
   form[hidden], .admin-only[hidden], .account-table[hidden] { display: none; }
   label { display: block; margin: 14px 0 6px; color: #b8b8c8; font-size: 14px; }
   input {
@@ -261,12 +284,14 @@ function buildGoldAdminPage() {
   th { color: #f0d060; font-weight: 800; background: rgba(17, 21, 34, 0.5); }
   td { color: #e8e8ed; }
   .status { min-height: 22px; margin-top: 14px; color: #f0d060; font-size: 14px; }
+  .status:empty { display: none; }
   .muted { margin-top: 14px; color: #8f94a8; font-size: 13px; line-height: 1.6; }
 </style>
 </head>
 <body>
+<a class="back-home-link" href="/">\u8fd4\u56de\u91d1\u4ef7\u9875\u9762</a>
 <main>
-  <h1>\u897f\u90e8\u90d1\u8bb0\u91d1\u4ef7\u540e\u53f0</h1>
+  <h1>\u91d1\u4ef7\u540e\u53f0</h1>
   <form id="login-form">
     <label for="login-phone">\u624b\u673a\u53f7</label>
     <input id="login-phone" name="phone" inputmode="numeric" autocomplete="username" required>
@@ -304,7 +329,7 @@ function buildGoldAdminPage() {
     <input id="grant-password" name="password" type="password" autocomplete="new-password" required>
     <button class="submit" type="submit">\u8bbe\u7f6e\u624b\u673a\u53f7\u6743\u9650</button>
   </form>
-  <div class="status" id="status">\u6b63\u5728\u8bfb\u53d6\u5f53\u524d\u91d1\u4ef7...</div>
+  <div class="status" id="status"></div>
   <div class="muted" id="account-status"></div>
 </main>
 <script>
@@ -381,7 +406,6 @@ async function loadPrice() {
   if (json.code !== 1) throw new Error(json.message || '\u8bfb\u53d6\u5931\u8d25');
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
-  setStatus('\u8bf7\u8f93\u5165\u624b\u673a\u53f7\u548c\u5bc6\u7801\u767b\u5f55\u540e\u53f0\u3002\u6700\u9ad8\u6743\u9650\u8d26\u53f7\uff1a18189182920');
 }
 
 document.getElementById('login-form').addEventListener('submit', async (event) => {

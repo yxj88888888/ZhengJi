@@ -20,21 +20,24 @@ if (!fs.existsSync(qrPath)) {
 if (!html.includes('class="header-qr-card"')) {
   throw new Error('Expected header QR card markup');
 }
-if (!html.includes('images/store-wechat-qr.jpg')) {
-  throw new Error('Expected header QR image source');
+if (!html.includes('class="header-qr-placeholder"')) {
+  throw new Error('Expected reserved QR placeholder markup');
+}
+if (html.includes('images/store-wechat-qr.jpg')) {
+  throw new Error('Header should reserve the QR position without loading the old QR image');
 }
 if (!html.includes('关注粤鑫金') || !html.includes('了解实时行情')) {
   throw new Error('Expected QR card follow text');
 }
 
-for (const selector of ['.header-qr-card', '.header-qr-img', '.header-qr-title', '.header-qr-subtitle']) {
+for (const selector of ['.header-qr-card', '.header-qr-placeholder', '.header-qr-title', '.header-qr-subtitle']) {
   if (!css.includes(selector)) throw new Error(`Missing CSS selector ${selector}`);
 }
 
-const qrImageRule = css.match(/\.header-qr-img\s*\{([^}]*)\}/m);
-if (!qrImageRule || !/width:\s*clamp\(74px,\s*10vw,\s*132px\)/.test(qrImageRule[1]) ||
-    !/height:\s*clamp\(74px,\s*10vw,\s*132px\)/.test(qrImageRule[1])) {
-  throw new Error('Expected responsive clamped desktop QR image');
+const qrPlaceholderRule = css.match(/\.header-qr-placeholder\s*\{([^}]*)\}/m);
+if (!qrPlaceholderRule || !/width:\s*clamp\(74px,\s*10vw,\s*132px\)/.test(qrPlaceholderRule[1]) ||
+    !/height:\s*clamp\(74px,\s*10vw,\s*132px\)/.test(qrPlaceholderRule[1])) {
+  throw new Error('Expected responsive clamped desktop QR placeholder');
 }
 
 const qrCardRule = css.match(/\.header-qr-card\s*\{([^}]*)\}/m);

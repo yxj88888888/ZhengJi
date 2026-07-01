@@ -36,8 +36,11 @@ if (!/display\s*:\s*flex/.test(sectionRule) || !/flex-direction\s*:\s*column/.te
 }
 
 const carouselRule = ruleFor('.certificate-carousel');
-if (!/flex\s*:\s*1\s+1\s+auto/.test(carouselRule) || !/min-height\s*:\s*0/.test(carouselRule)) {
-  throw new Error('Certificate carousel should consume remaining middle space');
+if (!/flex\s*:\s*0\s+1\s+auto/.test(carouselRule) ||
+    !/width\s*:\s*100%/.test(carouselRule) ||
+    !/aspect-ratio\s*:\s*2\.12/.test(carouselRule) ||
+    !/min-height\s*:\s*0/.test(carouselRule)) {
+  throw new Error('Certificate carousel should align with the price card while staying compact');
 }
 
 const noteRule = ruleFor('.fixed-price-note');

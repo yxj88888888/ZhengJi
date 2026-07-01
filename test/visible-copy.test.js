@@ -58,10 +58,10 @@ if (!html.includes('交易时间 10:00 至 20:00')) {
 }
 
 const expectedAdminCopy = [
-  '西部郑记金价后台',
+  '金价后台',
+  '返回金价页面',
   '登录后台',
   '保存金价',
-  '最高权限账号：18189182920',
   '设置手机号权限',
   '当前账号',
   '职位',
@@ -78,6 +78,12 @@ for (const text of expectedAdminCopy) {
 
 if (renderedEdgeFunction.includes('data-tab="bind"')) {
   throw new Error('Admin phone setup should not be visible as a pre-login tab');
+}
+
+if (renderedEdgeFunction.includes('请输入手机号和密码登录后台') ||
+    renderedEdgeFunction.includes('最高权限账号：18189182920') ||
+    renderedEdgeFunction.includes('西部郑记金价后台')) {
+  throw new Error('Admin login page should not show removed helper copy');
 }
 
 console.log('visible Chinese copy matches the fixed-price gold page');
