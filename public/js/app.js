@@ -82,8 +82,24 @@ function startPolling() {
   }, 3000);
 }
 
+function startCertificateCarousel() {
+  const slides = Array.from(document.querySelectorAll('.certificate-slide'));
+  if (slides.length <= 1) return;
+
+  const track = document.getElementById('certificate-track');
+  if (!track) return;
+
+  let currentIndex = 0;
+
+  setInterval(() => {
+    currentIndex = (currentIndex + 1) % slides.length;
+    track.style.transform = `translateX(-${currentIndex * 100}%)`;
+  }, 3000);
+}
+
 (async function bootstrap() {
   setText('header-datetime', formatHeaderDateTime());
   await fetchGoldCurrent();
+  startCertificateCarousel();
   startPolling();
 })();

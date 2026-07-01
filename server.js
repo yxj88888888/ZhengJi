@@ -13,14 +13,13 @@ const DATA_DIR = path.join(__dirname, 'data', 'daily');
 const REG_FILE = path.join(__dirname, 'data', 'registrations.json');
 const ORDER_FILE = path.join(__dirname, 'data', 'orders.json');
 const FIXED_PRICE_FILE = path.join(__dirname, 'data', 'fixed-price.json');
+const ADMIN_ACCOUNT_FILE = path.join(__dirname, 'data', 'admin-account.json');
 const GOLD_PRICE_SOURCE_URL = 'https://goldcard.yunxua.com/index/index/getRealTimePrices?sid=1001';
 const YUEXIN_MARKUP = 5;
 const YUEXIN_MARKUP_START_MINUTE = 15 * 60 + 30;
 const YUEXIN_MARKUP_END_MINUTE = 20 * 60;
 const DEFAULT_FIXED_SALE_PRICE = Number(process.env.ZHENGJI_DEFAULT_SALE_PRICE || 1130);
 const DEFAULT_FIXED_BUYBACK_PRICE = Number(process.env.ZHENGJI_DEFAULT_BUYBACK_PRICE || 1026.5);
-const ADMIN_USER = process.env.ZHENGJI_ADMIN_USER || 'admin';
-const ADMIN_PASSWORD = process.env.ZHENGJI_ADMIN_PASSWORD || 'zhengji2026';
 
 // ========== 微信公众号配置 ==========
 const WECHAT_TOKEN = process.env.WECHAT_TOKEN || 'yuexin_token_2024';
@@ -98,26 +97,53 @@ function fixedPricePayload(price) {
   };
 }
 
-function requireGoldAdmin(req, res, next) {
-  const header = req.headers.authorization || '';
-  const token = header.startsWith('Basic ') ? header.slice(6) : '';
-  let decoded = '';
+function isValidAdminPhone(phone) {
+  return /^1[3-9]\d{9}$/.test(String(phone || '').trim());
+}
 
-  try {
-    decoded = Buffer.from(token, 'base64').toString('utf8');
-  } catch (e) { /* ignore */ }
+function isValidAdminPassword(password) {
+  return String(password || '').length >= 6;
+}
 
-  const separatorIndex = decoded.indexOf(':');
-  const user = separatorIndex >= 0 ? decoded.slice(0, separatorIndex) : '';
-  const password = separatorIndex >= 0 ? decoded.slice(separatorIndex + 1) : '';
+function normalizeAdminAccount(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  if (!isValidAdminPhone(raw.phone) || !isValidAdminPassword(raw.password)) return null;
 
-  if (user === ADMIN_USER && password === ADMIN_PASSWORD) {
-    next();
-    return;
+  return {
+    phone: String(raw.phone).trim(),
+    password: String(raw.password),
+    created_at: raw.created_at || new Date().toISOString(),
+    updated_at: raw.updated_at || raw.created_at || new Date().toISOString()
+  };
+}
+
+function getAdminAccount() {
+  return normalizeAdminAccount(readJSON(ADMIN_ACCOUNT_FILE));
+}
+
+function saveAdminAccount(account) {
+  const normalized = normalizeAdminAccount({
+    ...account,
+    updated_at: new Date().toISOString()
+  });
+  if (!normalized) return null;
+  writeJSON(ADMIN_ACCOUNT_FILE, normalized);
+  return normalized;
+}
+
+function requireAccountMatch(account, body) {
+  if (!account) return '请先绑定手机号并设置密码';
+  if (String(body.phone || '').trim() !== account.phone || String(body.password || '') !== account.password) {
+    return '手机号或密码不正确';
   }
+  return '';
+}
 
-  res.set('WWW-Authenticate', 'Basic realm="ZhengJi Gold Admin", charset="UTF-8"');
-  res.status(401).type('html').send('需要账号密码');
+function adminAccountPayload(account) {
+  return {
+    admin_bound: Boolean(account),
+    admin_phone: account ? account.phone : null
+  };
 }
 
 function buildGoldAdminPage() {
@@ -126,7 +152,7 @@ function buildGoldAdminPage() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>西部郑记金价修改</title>
+<title>西部郑记金价后台</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -140,7 +166,7 @@ function buildGoldAdminPage() {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
   }
   main {
-    width: min(92vw, 460px);
+    width: min(92vw, 480px);
     padding: 28px;
     border: 1px solid rgba(212, 165, 55, 0.34);
     border-radius: 12px;
@@ -148,6 +174,19 @@ function buildGoldAdminPage() {
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
   }
   h1 { margin: 0 0 18px; color: #f0d060; font-size: 24px; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .tab {
+    border: 1px solid #2a2d3e;
+    border-radius: 8px;
+    background: #111522;
+    color: #b8b8c8;
+    padding: 10px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .tab.active { background: #d4a537; color: #111; border-color: #d4a537; }
+  section { display: none; }
+  section.active { display: block; }
   label { display: block; margin: 14px 0 6px; color: #b8b8c8; font-size: 14px; }
   input {
     width: 100%;
@@ -159,7 +198,7 @@ function buildGoldAdminPage() {
     font-size: 20px;
     font-weight: 700;
   }
-  button {
+  button.submit {
     width: 100%;
     margin-top: 20px;
     padding: 13px 16px;
@@ -177,43 +216,99 @@ function buildGoldAdminPage() {
 </head>
 <body>
 <main>
-  <h1>西部郑记金价修改</h1>
-  <form id="price-form">
+  <h1>西部郑记金价后台</h1>
+  <div class="tabs">
+    <button class="tab active" type="button" data-tab="login">登录修改</button>
+    <button class="tab" type="button" data-tab="bind">绑定手机</button>
+  </div>
+
+  <section class="active" id="panel-login">
+  <form id="login-price-form">
+    <label for="login-phone">手机号</label>
+    <input id="login-phone" name="phone" inputmode="numeric" autocomplete="username" required>
+    <label for="login-password">密码</label>
+    <input id="login-password" name="password" type="password" autocomplete="current-password" required>
     <label for="sale-price">今日金价（元/克）</label>
     <input id="sale-price" name="sale_price" inputmode="decimal" required>
     <label for="buyback-price">回购金价（元/克）</label>
     <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
-    <button type="submit">保存金价</button>
+    <button class="submit" type="submit">保存金价</button>
   </form>
+  </section>
+
+  <section id="panel-bind">
+  <form id="bind-form">
+    <label for="bind-phone">绑定手机号</label>
+    <input id="bind-phone" name="phone" inputmode="numeric" autocomplete="username" required>
+    <label for="bind-password">设置密码（至少 6 位）</label>
+    <input id="bind-password" name="password" type="password" autocomplete="new-password" required>
+    <button class="submit" type="submit">绑定并设置密码</button>
+  </form>
+  <div class="muted">首次使用请先绑定手机号。以后修改金价需要输入手机号和密码。</div>
+  </section>
+
   <div class="status" id="status">正在读取当前金价...</div>
-  <div class="muted">保存后，首页固定金价会在几秒内刷新。</div>
+  <div class="muted" id="account-status"></div>
 </main>
 <script>
 const saleInput = document.getElementById('sale-price');
 const buybackInput = document.getElementById('buyback-price');
 const statusEl = document.getElementById('status');
+const accountStatusEl = document.getElementById('account-status');
 
 function setStatus(text) {
   statusEl.textContent = text;
 }
 
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('section').forEach(panel => panel.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
 async function loadPrice() {
-  const response = await fetch('/gold-api/admin/price', { credentials: 'same-origin' });
+  const response = await fetch('/gold-api/admin/price');
   const json = await response.json();
   if (json.code !== 1) throw new Error(json.message || '读取失败');
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
+  accountStatusEl.textContent = json.admin_bound ? '已绑定手机号：' + json.admin_phone : '尚未绑定手机号，请先绑定';
   setStatus('当前更新时间：' + json.data.update_time);
 }
 
-document.getElementById('price-form').addEventListener('submit', async (event) => {
+document.getElementById('bind-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setStatus('正在绑定...');
+  const response = await fetch('/gold-api/admin/bind', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      phone: document.getElementById('bind-phone').value,
+      password: document.getElementById('bind-password').value,
+    }),
+  });
+  const json = await response.json();
+  if (json.code !== 1) {
+    setStatus(json.message || '绑定失败');
+    return;
+  }
+  document.getElementById('login-phone').value = json.data.phone;
+  accountStatusEl.textContent = '已绑定手机号：' + json.data.phone;
+  setStatus('绑定成功，请用手机号和密码保存金价');
+});
+
+document.getElementById('login-price-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus('正在保存...');
   const response = await fetch('/gold-api/admin/price', {
     method: 'POST',
-    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      phone: document.getElementById('login-phone').value,
+      password: document.getElementById('login-password').value,
       sale_price: saleInput.value,
       buyback_price: buybackInput.value,
     }),
@@ -800,15 +895,27 @@ app.get(['/gold-api/gold/history', '/api/fixed-gold/history'], (req, res) => {
   });
 });
 
-app.get('/gold-api/admin', requireGoldAdmin, (req, res) => {
+app.get('/gold-api/admin', (req, res) => {
   res.type('html').send(buildGoldAdminPage());
 });
 
-app.get('/gold-api/admin/price', requireGoldAdmin, (req, res) => {
-  res.json({ code: 1, data: fixedPricePayload(getFixedPrice()) });
+app.get('/gold-api/admin/price', (req, res) => {
+  const account = getAdminAccount();
+  res.json({
+    code: 1,
+    data: fixedPricePayload(getFixedPrice()),
+    ...adminAccountPayload(account)
+  });
 });
 
-app.post('/gold-api/admin/price', requireGoldAdmin, (req, res) => {
+app.post('/gold-api/admin/price', (req, res) => {
+  const account = getAdminAccount();
+  const authError = requireAccountMatch(account, req.body);
+  if (authError) {
+    res.status(401).json({ code: 0, message: authError });
+    return;
+  }
+
   const saved = saveFixedPrice({
     sale_price: req.body.sale_price,
     buyback_price: req.body.buyback_price
@@ -820,6 +927,23 @@ app.post('/gold-api/admin/price', requireGoldAdmin, (req, res) => {
   }
 
   res.json({ code: 1, data: fixedPricePayload(saved) });
+});
+
+app.post('/gold-api/admin/bind', (req, res) => {
+  const phone = String(req.body.phone || '').trim();
+  const password = String(req.body.password || '');
+
+  if (!isValidAdminPhone(phone)) {
+    res.status(400).json({ code: 0, message: '请输入有效手机号' });
+    return;
+  }
+  if (!isValidAdminPassword(password)) {
+    res.status(400).json({ code: 0, message: '密码至少 6 位' });
+    return;
+  }
+
+  const account = saveAdminAccount({ phone, password });
+  res.json({ code: 1, data: { phone: account.phone } });
 });
 
 // ========== 实名登记 ==========

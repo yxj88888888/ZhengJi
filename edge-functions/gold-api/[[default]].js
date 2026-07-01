@@ -1,10 +1,10 @@
 const FIXED_PRICE_KEY = 'zhengji_gold_fixed_current';
+const ADMIN_ACCOUNT_KEY = 'zhengji_gold_admin_account';
 const DEFAULT_SALE_PRICE = 1130;
 const DEFAULT_BUYBACK_PRICE = 1026.5;
-const DEFAULT_ADMIN_USER = 'admin';
-const DEFAULT_ADMIN_PASSWORD = 'zhengji2026';
 
 let memoryPrice = null;
+let memoryAdminAccount = null;
 
 function getKvStore(dependencies = {}) {
   if (dependencies.kv) return dependencies.kv;
@@ -27,13 +27,6 @@ function getKvDebug(dependencies = {}) {
 function getEnvValue(dependencies, key, fallback) {
   const env = dependencies.env || {};
   return env[key] || dependencies[key] || fallback;
-}
-
-function getAdminCredentials(dependencies = {}) {
-  return {
-    user: String(getEnvValue(dependencies, 'ZHENGJI_ADMIN_USER', DEFAULT_ADMIN_USER)),
-    password: String(getEnvValue(dependencies, 'ZHENGJI_ADMIN_PASSWORD', DEFAULT_ADMIN_PASSWORD)),
-  };
 }
 
 function getDefaultPrice(dependencies = {}, now = new Date()) {
@@ -71,6 +64,26 @@ function normalizePrice(raw, now = new Date()) {
   };
 }
 
+function isValidPhone(phone) {
+  return /^1[3-9]\d{9}$/.test(String(phone || '').trim());
+}
+
+function isValidPassword(password) {
+  return String(password || '').length >= 6;
+}
+
+function normalizeAdminAccount(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  if (!isValidPhone(raw.phone) || !isValidPassword(raw.password)) return null;
+
+  return {
+    phone: String(raw.phone).trim(),
+    password: String(raw.password),
+    created_at: raw.created_at || new Date().toISOString(),
+    updated_at: raw.updated_at || raw.created_at || new Date().toISOString(),
+  };
+}
+
 async function loadFixedPrice(kv, dependencies, now) {
   if (kv) {
     const saved = await kv.get(FIXED_PRICE_KEY, { type: 'json' });
@@ -97,53 +110,49 @@ async function saveFixedPrice(kv, price) {
   }
 }
 
-function json(data, status = 200, extraHeaders = {}) {
+async function loadAdminAccount(kv) {
+  if (kv) {
+    const saved = await kv.get(ADMIN_ACCOUNT_KEY, { type: 'json' });
+    const normalized = normalizeAdminAccount(saved);
+    if (normalized) {
+      memoryAdminAccount = normalized;
+      return normalized;
+    }
+  }
+
+  return memoryAdminAccount;
+}
+
+async function saveAdminAccount(kv, account) {
+  const normalized = normalizeAdminAccount({
+    ...account,
+    updated_at: new Date().toISOString(),
+  });
+  if (!normalized) return null;
+
+  memoryAdminAccount = normalized;
+  if (kv) await kv.put(ADMIN_ACCOUNT_KEY, JSON.stringify(normalized));
+  return normalized;
+}
+
+function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
-      ...extraHeaders,
     },
   });
 }
 
-function html(body, status = 200, extraHeaders = {}) {
+function html(body, status = 200) {
   return new Response(body, {
     status,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-store',
-      ...extraHeaders,
     },
   });
-}
-
-function unauthorized() {
-  return html('需要账号密码', 401, {
-    'WWW-Authenticate': 'Basic realm="ZhengJi Gold Admin", charset="UTF-8"',
-  });
-}
-
-function decodeBase64(value) {
-  if (typeof atob === 'function') return atob(value);
-  if (typeof Buffer !== 'undefined') return Buffer.from(value, 'base64').toString('utf8');
-  return '';
-}
-
-function isAuthorized(request, dependencies = {}) {
-  const header = request.headers.get('authorization') || '';
-  if (!header.startsWith('Basic ')) return false;
-
-  const decoded = decodeBase64(header.slice(6));
-  const separatorIndex = decoded.indexOf(':');
-  if (separatorIndex < 0) return false;
-
-  const user = decoded.slice(0, separatorIndex);
-  const password = decoded.slice(separatorIndex + 1);
-  const expected = getAdminCredentials(dependencies);
-
-  return user === expected.user && password === expected.password;
 }
 
 async function readBody(request) {
@@ -171,7 +180,7 @@ function adminPage() {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>西部郑记金价修改</title>
+<title>西部郑记金价后台</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -185,7 +194,7 @@ function adminPage() {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
   }
   main {
-    width: min(92vw, 460px);
+    width: min(92vw, 480px);
     padding: 28px;
     border: 1px solid rgba(212, 165, 55, 0.34);
     border-radius: 12px;
@@ -193,6 +202,19 @@ function adminPage() {
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
   }
   h1 { margin: 0 0 18px; color: #f0d060; font-size: 24px; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .tab {
+    border: 1px solid #2a2d3e;
+    border-radius: 8px;
+    background: #111522;
+    color: #b8b8c8;
+    padding: 10px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .tab.active { background: #d4a537; color: #111; border-color: #d4a537; }
+  section { display: none; }
+  section.active { display: block; }
   label { display: block; margin: 14px 0 6px; color: #b8b8c8; font-size: 14px; }
   input {
     width: 100%;
@@ -204,7 +226,7 @@ function adminPage() {
     font-size: 20px;
     font-weight: 700;
   }
-  button {
+  button.submit {
     width: 100%;
     margin-top: 20px;
     padding: 13px 16px;
@@ -222,43 +244,97 @@ function adminPage() {
 </head>
 <body>
 <main>
-  <h1>西部郑记金价修改</h1>
-  <form id="price-form">
-    <label for="sale-price">今日金价（元/克）</label>
-    <input id="sale-price" name="sale_price" inputmode="decimal" required>
-    <label for="buyback-price">回购金价（元/克）</label>
-    <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
-    <button type="submit">保存金价</button>
-  </form>
+  <h1>西部郑记金价后台</h1>
+  <div class="tabs">
+    <button class="tab active" type="button" data-tab="login">登录修改</button>
+    <button class="tab" type="button" data-tab="bind">绑定手机</button>
+  </div>
+
+  <section class="active" id="panel-login">
+    <form id="login-price-form">
+      <label for="login-phone">手机号</label>
+      <input id="login-phone" name="phone" inputmode="numeric" autocomplete="username" required>
+      <label for="login-password">密码</label>
+      <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      <label for="sale-price">今日金价（元/克）</label>
+      <input id="sale-price" name="sale_price" inputmode="decimal" required>
+      <label for="buyback-price">回购金价（元/克）</label>
+      <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
+      <button class="submit" type="submit">保存金价</button>
+    </form>
+  </section>
+
+  <section id="panel-bind">
+    <form id="bind-form">
+      <label for="bind-phone">绑定手机号</label>
+      <input id="bind-phone" name="phone" inputmode="numeric" autocomplete="username" required>
+      <label for="bind-password">设置密码（至少 6 位）</label>
+      <input id="bind-password" name="password" type="password" autocomplete="new-password" required>
+      <button class="submit" type="submit">绑定并设置密码</button>
+    </form>
+    <div class="muted">首次使用请先绑定手机号。以后修改金价需要输入手机号和密码。</div>
+  </section>
+
   <div class="status" id="status">正在读取当前金价...</div>
-  <div class="muted">保存后，首页固定金价会在几秒内刷新。</div>
+  <div class="muted" id="account-status"></div>
 </main>
 <script>
+const statusEl = document.getElementById('status');
+const accountStatusEl = document.getElementById('account-status');
 const saleInput = document.getElementById('sale-price');
 const buybackInput = document.getElementById('buyback-price');
-const statusEl = document.getElementById('status');
 
-function setStatus(text) {
-  statusEl.textContent = text;
-}
+function setStatus(text) { statusEl.textContent = text; }
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('section').forEach(panel => panel.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
 
 async function loadPrice() {
-  const response = await fetch('/gold-api/admin/price', { credentials: 'same-origin' });
+  const response = await fetch('/gold-api/admin/price');
   const json = await response.json();
   if (json.code !== 1) throw new Error(json.message || '读取失败');
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
+  accountStatusEl.textContent = json.admin_bound ? '已绑定手机号：' + json.admin_phone : '尚未绑定手机号，请先绑定';
   setStatus('当前更新时间：' + json.data.update_time);
 }
 
-document.getElementById('price-form').addEventListener('submit', async (event) => {
+document.getElementById('bind-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setStatus('正在绑定...');
+  const response = await fetch('/gold-api/admin/bind', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      phone: document.getElementById('bind-phone').value,
+      password: document.getElementById('bind-password').value,
+    }),
+  });
+  const json = await response.json();
+  if (json.code !== 1) {
+    setStatus(json.message || '绑定失败');
+    return;
+  }
+  document.getElementById('login-phone').value = json.data.phone;
+  accountStatusEl.textContent = '已绑定手机号：' + json.data.phone;
+  setStatus('绑定成功，请用手机号和密码保存金价');
+});
+
+document.getElementById('login-price-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus('正在保存...');
   const response = await fetch('/gold-api/admin/price', {
     method: 'POST',
-    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      phone: document.getElementById('login-phone').value,
+      password: document.getElementById('login-password').value,
       sale_price: saleInput.value,
       buyback_price: buybackInput.value,
     }),
@@ -279,6 +355,23 @@ loadPrice().catch(error => setStatus(error.message || '读取失败'));
 </html>`;
 }
 
+function accountStatusPayload(account) {
+  return {
+    admin_bound: Boolean(account),
+    admin_phone: account ? account.phone : null,
+  };
+}
+
+function requireAccountMatch(account, body) {
+  if (!account) {
+    return '请先绑定手机号并设置密码';
+  }
+  if (String(body.phone || '').trim() !== account.phone || String(body.password || '') !== account.password) {
+    return '手机号或密码不正确';
+  }
+  return '';
+}
+
 export async function handleApiRequest(request, dependencies = {}) {
   const url = new URL(request.url);
   const now = dependencies.now ? dependencies.now() : new Date();
@@ -287,13 +380,16 @@ export async function handleApiRequest(request, dependencies = {}) {
   try {
     if (url.pathname === '/gold-api/health' || url.pathname === '/api/health') {
       const price = await loadFixedPrice(kv, dependencies, now);
+      const account = await loadAdminAccount(kv);
       return json({
         status: 'ok',
         runtime: 'edgeone-edge-functions',
         mode: 'fixed-price',
         current_price: publicPricePayload(price),
+        ...accountStatusPayload(account),
         kv: kv ? 'enabled' : 'disabled',
         kv_key: FIXED_PRICE_KEY,
+        admin_key: ADMIN_ACCOUNT_KEY,
         kv_debug: url.searchParams.get('debug') === 'kv' ? getKvDebug(dependencies) : undefined,
         server_time: formatBeijingDateTime(now),
       });
@@ -317,25 +413,31 @@ export async function handleApiRequest(request, dependencies = {}) {
     }
 
     if (url.pathname === '/gold-api/admin') {
-      if (!isAuthorized(request, dependencies)) return unauthorized();
       return html(adminPage());
     }
 
     if (url.pathname === '/gold-api/admin/price') {
-      if (!isAuthorized(request, dependencies)) return unauthorized();
+      const account = await loadAdminAccount(kv);
 
       if (request.method === 'GET') {
         const price = await loadFixedPrice(kv, dependencies, now);
-        return json({ code: 1, data: publicPricePayload(price) });
+        return json({
+          code: 1,
+          data: publicPricePayload(price),
+          ...accountStatusPayload(account),
+        });
       }
 
       if (request.method === 'POST' || request.method === 'PUT') {
         const body = await readBody(request);
+        const authError = requireAccountMatch(account, body);
+        if (authError) return json({ code: 0, message: authError }, 401);
+
         const price = normalizePrice({
           sale_price: body.sale_price,
           buyback_price: body.buyback_price,
           update_time: formatBeijingDateTime(now),
-          updated_by: 'admin',
+          updated_by: account.phone,
         }, now);
 
         if (!price) {
@@ -347,6 +449,26 @@ export async function handleApiRequest(request, dependencies = {}) {
       }
 
       return json({ code: 0, message: 'Method not allowed' }, 405);
+    }
+
+    if (url.pathname === '/gold-api/admin/bind') {
+      if (request.method !== 'POST' && request.method !== 'PUT') {
+        return json({ code: 0, message: 'Method not allowed' }, 405);
+      }
+
+      const body = await readBody(request);
+      const phone = String(body.phone || '').trim();
+      const password = String(body.password || '');
+
+      if (!isValidPhone(phone)) {
+        return json({ code: 0, message: '请输入有效手机号' }, 400);
+      }
+      if (!isValidPassword(password)) {
+        return json({ code: 0, message: '密码至少 6 位' }, 400);
+      }
+
+      const account = await saveAdminAccount(kv, { phone, password });
+      return json({ code: 1, data: { phone: account.phone } });
     }
 
     return json({ code: 0, message: 'Not found' }, 404);

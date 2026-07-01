@@ -24,10 +24,6 @@ if (config.outputDirectory !== 'public') {
   throw new Error('Expected EdgeOne to publish the public directory');
 }
 
-function auth(user = 'admin', password = 'zhengji2026') {
-  return 'Basic ' + Buffer.from(`${user}:${password}`).toString('base64');
-}
-
 function createKv(initial = new Map()) {
   return {
     values: initial,
@@ -47,7 +43,7 @@ function createKv(initial = new Map()) {
   const kv = createKv();
   const dependencies = {
     kv,
-    now: () => new Date('2026-06-30T16:00:00+08:00'),
+    now: () => new Date('2026-07-01T16:00:00+08:00'),
   };
 
   const currentResponse = await edgeFunction.handleApiRequest(
@@ -55,7 +51,6 @@ function createKv(initial = new Map()) {
     dependencies
   );
   const currentPayload = await currentResponse.json();
-
   if (currentResponse.status !== 200 || currentPayload.code !== 1) {
     throw new Error('Expected the public current price API to succeed');
   }
@@ -63,33 +58,75 @@ function createKv(initial = new Map()) {
     throw new Error('Expected current price API to return the default fixed price');
   }
 
-  const blockedAdminResponse = await edgeFunction.handleApiRequest(
+  const adminPageResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin'),
     dependencies
   );
-  if (blockedAdminResponse.status !== 401) {
-    throw new Error('Expected admin page to require Basic Auth');
+  const adminHtml = await adminPageResponse.text();
+  if (adminPageResponse.status !== 200 || !adminHtml.includes('绑定手机号') || !adminHtml.includes('设置密码')) {
+    throw new Error('Expected admin page to render phone binding and password setup');
   }
 
-  const adminPageResponse = await edgeFunction.handleApiRequest(
-    new Request('https://example.com/gold-api/admin', {
-      headers: { Authorization: auth() },
+  const unboundSaveResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/price', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: '13800138000',
+        password: 'abc123',
+        sale_price: '1168.88',
+        buyback_price: '1055.66',
+      }),
     }),
     dependencies
   );
-  const adminHtml = await adminPageResponse.text();
-  if (adminPageResponse.status !== 200 || !adminHtml.includes('西部郑记金价修改')) {
-    throw new Error('Expected authorized admin page to render the price editor');
+  if (unboundSaveResponse.status !== 401) {
+    throw new Error('Expected price save to require a bound phone account first');
+  }
+
+  const bindResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/bind', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: '13800138000',
+        password: 'abc123',
+      }),
+    }),
+    dependencies
+  );
+  const bindPayload = await bindResponse.json();
+  if (bindResponse.status !== 200 || bindPayload.code !== 1 || bindPayload.data.phone !== '13800138000') {
+    throw new Error('Expected valid phone binding to succeed');
+  }
+  if (!kv.values.has('zhengji_gold_admin_account')) {
+    throw new Error('Expected admin account to be saved under the ZhengJi admin KV key');
+  }
+
+  const wrongPasswordResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/price', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: '13800138000',
+        password: 'wrong-password',
+        sale_price: '1168.88',
+        buyback_price: '1055.66',
+      }),
+    }),
+    dependencies
+  );
+  if (wrongPasswordResponse.status !== 401) {
+    throw new Error('Expected wrong password to be rejected');
   }
 
   const saveResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin/price', {
       method: 'POST',
-      headers: {
-        Authorization: auth(),
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        phone: '13800138000',
+        password: 'abc123',
         sale_price: '1168.88',
         buyback_price: '1055.66',
       }),
@@ -102,6 +139,15 @@ function createKv(initial = new Map()) {
   }
   if (savePayload.data.sale_price !== '1168.88' || savePayload.data.buyback_price !== '1055.66') {
     throw new Error('Expected admin save to return normalized fixed prices');
+  }
+
+  const adminPriceResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/price'),
+    dependencies
+  );
+  const adminPricePayload = await adminPriceResponse.json();
+  if (!adminPricePayload.admin_bound || adminPricePayload.admin_phone !== '13800138000') {
+    throw new Error('Expected admin price status to expose bound phone metadata');
   }
 
   const afterSaveResponse = await edgeFunction.handleApiRequest(
@@ -129,14 +175,25 @@ function createKv(initial = new Map()) {
     throw new Error('Expected fixed-price history point to match the current fixed price');
   }
 
+  const invalidBindResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/bind', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '12345', password: 'abc123' }),
+    }),
+    dependencies
+  );
+  if (invalidBindResponse.status !== 400) {
+    throw new Error('Expected invalid phone binding to be rejected');
+  }
+
   const invalidSaveResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin/price', {
       method: 'POST',
-      headers: {
-        Authorization: auth(),
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        phone: '13800138000',
+        password: 'abc123',
         sale_price: 'abc',
         buyback_price: '1055.66',
       }),
@@ -152,11 +209,14 @@ function createKv(initial = new Map()) {
     dependencies
   );
   const healthPayload = await healthResponse.json();
-  if (healthPayload.mode !== 'fixed-price' || healthPayload.kv_key !== 'zhengji_gold_fixed_current') {
-    throw new Error('Expected health endpoint to describe fixed-price mode and KV key');
+  if (healthPayload.mode !== 'fixed-price' ||
+      healthPayload.kv_key !== 'zhengji_gold_fixed_current' ||
+      healthPayload.admin_key !== 'zhengji_gold_admin_account' ||
+      !healthPayload.admin_bound) {
+    throw new Error('Expected health endpoint to describe fixed-price mode and admin binding');
   }
 
-  console.log('EdgeOne function supports fixed prices and protected admin updates');
+  console.log('EdgeOne function supports phone-bound admin price updates');
 })().catch(error => {
   console.error(error);
   process.exit(1);
