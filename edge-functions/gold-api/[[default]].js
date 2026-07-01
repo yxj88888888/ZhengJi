@@ -1,3 +1,5 @@
+import { getStore as getBlobSdkStore } from '@edgeone/pages-blob';
+
 const FIXED_PRICE_KEY = 'zhengji_gold_fixed_current';
 const ADMIN_ACCOUNT_KEY = 'zhengji_gold_admin_account';
 const DEFAULT_SALE_PRICE = 1130;
@@ -16,8 +18,8 @@ function getKvStore(dependencies = {}) {
 
 function getBlobStore(dependencies = {}) {
   if (dependencies.blob) return dependencies.blob;
-  if (typeof getStore === 'function') return getStore('zhengji_gold_store');
   if (typeof globalThis.getStore === 'function') return globalThis.getStore('zhengji_gold_store');
+  if (getBlobSdkStore) return getBlobSdkStore({ name: 'zhengji_gold_store', consistency: 'strong' });
   return null;
 }
 
@@ -40,14 +42,15 @@ function createStorage(dependencies = {}) {
     return {
       type: 'blob',
       async get(key) {
-        const value = await blob.get(key);
+        const value = await blob.get(key, { type: 'json', consistency: 'strong' });
         if (!value) return null;
-        if (typeof value === 'string') return JSON.parse(value);
-        if (typeof value.json === 'function') return value.json();
-        if (typeof value.text === 'function') return JSON.parse(await value.text());
         return value;
       },
       async put(key, value) {
+        if (typeof blob.setJSON === 'function') {
+          await blob.setJSON(key, value);
+          return;
+        }
         await blob.put(key, JSON.stringify(value));
       },
     };
@@ -63,7 +66,7 @@ function getKvDebug(dependencies = {}) {
     env_zhengji_gold_kv: Boolean(env.ZHENGJI_GOLD_KV),
     bare_zhengji_gold_kv: typeof ZHENGJI_GOLD_KV !== 'undefined',
     global_zhengji_gold_kv: Boolean(globalThis.ZHENGJI_GOLD_KV),
-    blob_store: Boolean(getBlobStore(dependencies)),
+    blob_store: Boolean(dependencies.blob || globalThis.getStore || getBlobSdkStore),
   };
 }
 

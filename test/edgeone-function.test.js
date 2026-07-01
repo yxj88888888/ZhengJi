@@ -40,6 +40,22 @@ function createKv(initial = new Map()) {
 function createBlob(initial = new Map()) {
   return {
     values: initial,
+    async get(key, options) {
+      const value = this.values.get(key) || null;
+      return options && options.type === 'json' && value ? JSON.parse(value) : value;
+    },
+    async put(key, value) {
+      this.values.set(key, value);
+    },
+    async setJSON(key, value) {
+      this.values.set(key, JSON.stringify(value));
+    },
+  };
+}
+
+function createLegacyBlob(initial = new Map()) {
+  return {
+    values: initial,
     async get(key) {
       return this.values.get(key) || null;
     },
@@ -269,6 +285,23 @@ function createBlob(initial = new Map()) {
   const blobHealthPayload = await blobHealthResponse.json();
   if (blobHealthPayload.storage !== 'blob' || blobHealthPayload.kv !== 'disabled') {
     throw new Error('Expected health endpoint to report Blob fallback storage');
+  }
+
+  const legacyBlob = createLegacyBlob();
+  const legacyDependencies = {
+    blob: legacyBlob,
+    now: () => new Date('2026-07-01T17:30:00+08:00'),
+  };
+  const legacyBindResponse = await edgeFunction.handleApiRequest(
+    new Request('https://example.com/gold-api/admin/bind', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '13700137000', password: 'legacy123' }),
+    }),
+    legacyDependencies
+  );
+  if (legacyBindResponse.status !== 200 || !legacyBlob.values.has('zhengji_gold_admin_account')) {
+    throw new Error('Expected legacy Blob fallback to persist the admin account');
   }
 
   console.log('EdgeOne function supports phone-bound admin price updates');
