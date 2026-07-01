@@ -224,19 +224,19 @@ function buildGoldAdminPage() {
 
   <section class="active" id="panel-login">
   <form id="login-form">
-    <label for="login-phone">???</label>
+    <label for="login-phone">手机号</label>
     <input id="login-phone" name="phone" inputmode="numeric" autocomplete="username" required>
     <label for="login-password">??</label>
     <input id="login-password" name="password" type="password" autocomplete="current-password" required>
-    <button class="submit" type="submit">????</button>
+    <button class="submit" type="submit">登录后台</button>
   </form>
   <form id="login-price-form" hidden>
-    <div class="muted">????????????</div>
-    <label for="sale-price">??????/??</label>
+    <div class="muted">已登录，可修改当前金价。</div>
+    <label for="sale-price">今日金价（元/克）</label>
     <input id="sale-price" name="sale_price" inputmode="decimal" required>
-    <label for="buyback-price">??????/??</label>
+    <label for="buyback-price">回购金价（元/克）</label>
     <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
-    <button class="submit" type="submit">????</button>
+    <button class="submit" type="submit">保存金价</button>
   </form>
   </section>
 
@@ -271,6 +271,13 @@ function showPriceForm() {
   loginForm.hidden = true;
   priceForm.hidden = false;
 }
+function apiPath(path) {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('eo_token');
+  const time = params.get('eo_time');
+  if (!token || !time) return path;
+  return path + '?eo_token=' + encodeURIComponent(token) + '&eo_time=' + encodeURIComponent(time);
+}
 
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -282,19 +289,19 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 async function loadPrice() {
-  const response = await fetch('/gold-api/admin/price');
+  const response = await fetch(apiPath('/gold-api/admin/price'));
   const json = await response.json();
-  if (json.code !== 1) throw new Error(json.message || '????');
+  if (json.code !== 1) throw new Error(json.message || '读取失败');
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
-  accountStatusEl.textContent = json.admin_bound ? '???????' + json.admin_phone : '????????????';
-  setStatus(json.admin_bound ? '?????????????' : '???????????');
+  accountStatusEl.textContent = json.admin_bound ? '已绑定手机号：' + json.admin_phone : '尚未绑定手机号，请先绑定';
+  setStatus(json.admin_bound ? '请输入手机号和密码登录后台' : '首次使用请先绑定手机号');
 }
 
 document.getElementById('bind-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus('正在绑定...');
-  const response = await fetch('/gold-api/admin/bind', {
+  const response = await fetch(apiPath('/gold-api/admin/bind'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -314,17 +321,17 @@ document.getElementById('bind-form').addEventListener('submit', async (event) =>
 
 document.getElementById('login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  setStatus('????...');
+  setStatus('正在登录...');
   const phone = document.getElementById('login-phone').value;
   const password = document.getElementById('login-password').value;
-  const response = await fetch('/gold-api/admin/login', {
+  const response = await fetch(apiPath('/gold-api/admin/login'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone, password }),
   });
   const json = await response.json();
   if (json.code !== 1) {
-    setStatus(json.message || '????');
+    setStatus(json.message || '登录失败');
     return;
   }
   loggedInPhone = phone;
@@ -332,14 +339,14 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
   showPriceForm();
-  accountStatusEl.textContent = '???????' + json.admin_phone;
-  setStatus('????????????' + json.data.update_time);
+  accountStatusEl.textContent = '已登录手机号：' + json.admin_phone;
+  setStatus('登录成功，当前更新时间：' + json.data.update_time);
 });
 
 document.getElementById('login-price-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  setStatus('????...');
-  const response = await fetch('/gold-api/admin/price', {
+  setStatus('正在保存...');
+  const response = await fetch(apiPath('/gold-api/admin/price'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

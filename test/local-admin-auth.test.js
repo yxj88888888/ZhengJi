@@ -15,6 +15,8 @@ const expectedSnippets = [
   'id="login-price-form" hidden',
   '/gold-api/admin/login',
   'loggedInPhone',
+  'function apiPath(path)',
+  "fetch(apiPath('/gold-api/admin/price'))",
   '绑定手机号',
   '设置密码',
   '手机号或密码不正确',
@@ -24,6 +26,11 @@ for (const snippet of expectedSnippets) {
   if (!serverSource.includes(snippet)) {
     throw new Error(`Missing local admin auth implementation snippet: ${snippet}`);
   }
+}
+
+
+if (serverSource.includes('???')) {
+  throw new Error('Admin page should not contain question-mark mojibake');
 }
 
 if (serverSource.includes("app.get('/gold-api/admin', requireGoldAdmin")) {

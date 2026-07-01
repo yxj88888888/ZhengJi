@@ -99,6 +99,14 @@ function createLegacyBlob(initial = new Map()) {
       !adminHtml.includes('/gold-api/admin/login')) {
     throw new Error('Expected admin page to hide price editor until login succeeds');
   }
+  if (adminHtml.includes('???') || !adminHtml.includes('手机号') || !adminHtml.includes('登录后台')) {
+    throw new Error('Expected admin page Chinese copy to render without question marks');
+  }
+  if (!adminHtml.includes('function apiPath(path)') ||
+      !adminHtml.includes("fetch(apiPath('/gold-api/admin/price'))") ||
+      !adminHtml.includes("fetch(apiPath('/gold-api/admin/bind')")) {
+    throw new Error('Expected admin page API calls to preserve EdgeOne preview token');
+  }
 
   const unboundSaveResponse = await edgeFunction.handleApiRequest(
     new Request('https://example.com/gold-api/admin/price', {
