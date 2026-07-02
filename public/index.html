@@ -6,14 +6,14 @@
 <title>粤鑫金 - 实时贵金属行情</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=mobile-qr-overlap-20260702">
+<link rel="stylesheet" href="css/style.css?v=admin-entry-click-login-v5-20260702">
 </head>
 <body class="min-h-screen">
 
 <header class="header-bar">
   <div class="header-inner">
-    <div class="header-qr-card" aria-label="预留二维码区域">
-      <div class="header-qr-placeholder" aria-hidden="true"></div>
+    <div class="header-qr-card" aria-label="店铺微信二维码">
+      <img src="images/store-wechat-qr.jpg" alt="店铺微信二维码" class="header-qr-img">
       <div class="header-qr-copy">
         <div class="header-qr-title">欢迎关注店铺微信</div>
       </div>
@@ -31,7 +31,7 @@
         </div>
       </div>
       <div class="header-time" id="header-datetime">--</div>
-      <div class="header-address">店铺地址：西部黄金珠宝城二楼西部郑记对面</div>
+      <div class="header-address">店铺地址：西部黄金珠宝城二楼2025铺（西部郑记对面）</div>
     </div>
     <div class="header-spacer" aria-hidden="true"></div>
   </div>
@@ -60,6 +60,22 @@
             <span class="price-unit">元/克</span>
           </div>
         </div>
+
+        <div class="price-card silver-sale-card" id="silver-sale-card">
+          <div class="price-label">今日银价</div>
+          <div class="price-value-wrap">
+            <span class="price-value" id="silver-sale-price">--</span>
+            <span class="price-unit">元/克</span>
+          </div>
+        </div>
+
+        <div class="price-card silver-buyback-card" id="silver-buyback-card">
+          <div class="price-label">回购银价</div>
+          <div class="price-value-wrap">
+            <span class="price-value" id="silver-buyback-price">--</span>
+            <span class="price-unit">元/克</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -72,6 +88,8 @@
         <img class="certificate-slide" src="images/certificates/lbma-silver.jpg" alt="LBMA白银交割资质">
         <img class="certificate-slide" src="images/certificates/lbma-gold.jpg" alt="LBMA黄金交割资质">
         <img class="certificate-slide" src="images/certificates/lppm-palladium.jpg" alt="LPPM钯金交割资质">
+        <img class="certificate-slide" src="images/certificates/yuexin-precious-metals.png" alt="粤鑫贵金属臻品展示">
+        <img class="certificate-slide" src="images/certificates/yuexin-gold-investment.png" alt="粤鑫金投资金条展示">
       </div>
     </div>
 
@@ -82,6 +100,7 @@
 </main>
 
 <a class="admin-entry-link" id="admin-entry-link" href="/gold-api/admin" aria-label="进入金价后台登录页面">
+  <span class="admin-entry-arrow" aria-hidden="true"></span>
   <img src="images/store/logo.jpg" alt="" class="admin-entry-logo" aria-hidden="true">
 </a>
 
@@ -92,15 +111,246 @@
   (function () {
     var adminEntry = document.getElementById('admin-entry-link');
     if (!adminEntry) return;
+    var adminArrow = adminEntry.querySelector('.admin-entry-arrow');
+    var STORAGE_KEY = 'zhengji-admin-entry-position';
+    var entryOpenedAt = 0;
+    var dragState = null;
+    var didDrag = false;
+    var dockThreshold = 34;
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function clearDock() {
+      adminEntry.classList.remove('admin-entry-docked-left', 'admin-entry-docked-right');
+    }
+
+    function applyPosition(position) {
+      var width = adminEntry.offsetWidth || 56;
+      var height = adminEntry.offsetHeight || 56;
+      var left = clamp(position.left, 0, window.innerWidth - width);
+      var top = clamp(position.top, 0, window.innerHeight - height);
+      var dock = position.dock || '';
+      var isOpen = adminEntry.classList.contains('admin-entry-open') || adminEntry.classList.contains('admin-entry-dragging');
+      var renderedLeft = left;
+      if (dock === 'right' && !isOpen) renderedLeft = window.innerWidth;
+      if (dock === 'left' && !isOpen) renderedLeft = -width - 24;
+      adminEntry.dataset.visibleLeft = String(left);
+      adminEntry.style.left = renderedLeft + 'px';
+      adminEntry.style.top = top + 'px';
+      adminEntry.style.right = 'auto';
+      adminEntry.style.bottom = 'auto';
+      adminEntry.dataset.dock = dock;
+      clearDock();
+      if (dock === 'left') adminEntry.classList.add('admin-entry-docked-left');
+      if (dock === 'right') adminEntry.classList.add('admin-entry-docked-right');
+    }
+
+    function savePosition() {
+      var width = adminEntry.offsetWidth || 56;
+      var dock = adminEntry.dataset.dock || '';
+      var visibleLeft = parseFloat(adminEntry.dataset.visibleLeft);
+      if (!Number.isFinite(visibleLeft)) visibleLeft = parseFloat(adminEntry.style.left) || 0;
+      if (dock === 'left') visibleLeft = 0;
+      if (dock === 'right') visibleLeft = window.innerWidth - width;
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          left: visibleLeft,
+          top: parseFloat(adminEntry.style.top) || 0,
+          dock: dock,
+        }));
+      } catch (error) {}
+    }
+
+    function restorePosition() {
+      var width = adminEntry.offsetWidth || 56;
+      var height = adminEntry.offsetHeight || 56;
+      var fallback = {
+        left: window.innerWidth - width - 8,
+        top: Math.max(72, Math.round(window.innerHeight * 0.1)),
+        dock: 'right',
+      };
+      try {
+        var saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || 'null');
+        applyPosition(saved && typeof saved === 'object' ? saved : fallback);
+      } catch (error) {
+        applyPosition(fallback);
+      }
+    }
+
+    function revealEntry() {
+      adminEntry.classList.add('admin-entry-open');
+      entryOpenedAt = Date.now();
+      applyPosition({
+        left: parseFloat(adminEntry.dataset.visibleLeft) || 0,
+        top: parseFloat(adminEntry.style.top) || 0,
+        dock: adminEntry.dataset.dock || '',
+      });
+      window.setTimeout(function () {
+        if (Date.now() - entryOpenedAt >= 2400) {
+          adminEntry.classList.remove('admin-entry-open');
+          applyPosition({
+            left: parseFloat(adminEntry.dataset.visibleLeft) || 0,
+            top: parseFloat(adminEntry.style.top) || 0,
+            dock: adminEntry.dataset.dock || '',
+          });
+        }
+      }, 2500);
+    }
+
+    function isDocked() {
+      return adminEntry.classList.contains('admin-entry-docked-left') || adminEntry.classList.contains('admin-entry-docked-right');
+    }
+
+    function isPointerInsideIcon(event) {
+      var rect = adminEntry.getBoundingClientRect();
+      return event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+    }
+
+    function isPointerInsideArrow(event) {
+      if (!adminArrow) return false;
+      var rect = adminArrow.getBoundingClientRect();
+      return event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+    }
+
+    if (adminArrow) adminArrow.addEventListener('pointerenter', function () {
+      var canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+      if (canHover && isDocked()) {
+        revealEntry();
+      }
+    });
+
+    document.addEventListener('pointermove', function (event) {
+      var canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+      if (canHover && isDocked() && !adminEntry.classList.contains('admin-entry-open') && isPointerInsideArrow(event)) {
+        revealEntry();
+      }
+    });
+
+    adminEntry.addEventListener('pointerdown', function (event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      if (!isPointerInsideIcon(event)) return;
+      if (isDocked() && !adminEntry.classList.contains('admin-entry-open')) return;
+      var rect = adminEntry.getBoundingClientRect();
+      dragState = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top,
+      };
+      didDrag = false;
+      clearDock();
+      adminEntry.classList.remove('admin-entry-open');
+      adminEntry.classList.add('admin-entry-dragging');
+      if (adminEntry.setPointerCapture) adminEntry.setPointerCapture(event.pointerId);
+    });
+
+    adminEntry.addEventListener('pointermove', function (event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      var width = adminEntry.offsetWidth || 56;
+      var height = adminEntry.offsetHeight || 56;
+      var left = clamp(event.clientX - dragState.offsetX, 0, window.innerWidth - width);
+      var top = clamp(event.clientY - dragState.offsetY, 0, window.innerHeight - height);
+      if (Math.abs(event.clientX - dragState.startX) > 4 || Math.abs(event.clientY - dragState.startY) > 4) {
+        didDrag = true;
+      }
+      adminEntry.style.left = left + 'px';
+      adminEntry.style.top = top + 'px';
+      adminEntry.style.right = 'auto';
+      adminEntry.style.bottom = 'auto';
+      event.preventDefault();
+    });
+
+    adminEntry.addEventListener('pointerup', function (event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      if (!didDrag) {
+        adminEntry.classList.remove('admin-entry-dragging');
+        adminEntry.classList.add('admin-entry-open');
+        applyPosition({
+          left: parseFloat(adminEntry.dataset.visibleLeft) || parseFloat(adminEntry.style.left) || 0,
+          top: parseFloat(adminEntry.style.top) || 0,
+          dock: adminEntry.dataset.dock || '',
+        });
+        dragState = null;
+        window.location.href = adminEntry.href;
+        return;
+      }
+      var width = adminEntry.offsetWidth || 56;
+      var left = parseFloat(adminEntry.style.left) || 0;
+      var top = parseFloat(adminEntry.style.top) || 0;
+      var dock = '';
+      if (left <= dockThreshold) {
+        left = 0;
+        dock = 'left';
+      } else if (window.innerWidth - (left + width) <= dockThreshold) {
+        left = window.innerWidth - width;
+        dock = 'right';
+      }
+      adminEntry.classList.remove('admin-entry-dragging');
+      applyPosition({ left: left, top: top, dock: dock });
+      savePosition();
+      dragState = null;
+    });
+
+    adminEntry.addEventListener('mouseup', function (event) {
+      if (event.button !== undefined && event.button !== 0) return;
+      if (didDrag) return;
+      if (isPointerInsideIcon(event) && (adminEntry.classList.contains('admin-entry-open') || !isDocked())) {
+        window.location.href = adminEntry.href;
+      }
+    });
+
+    window.addEventListener('resize', function () {
+      applyPosition({
+        left: parseFloat(adminEntry.dataset.visibleLeft) || parseFloat(adminEntry.style.left) || 0,
+        top: parseFloat(adminEntry.style.top) || 0,
+        dock: adminEntry.dataset.dock || '',
+      });
+      savePosition();
+    });
+
+    adminEntry.addEventListener('click', function (event) {
+      if (didDrag) {
+        event.preventDefault();
+        didDrag = false;
+        return;
+      }
+      var isCoarsePointer = window.matchMedia && window.matchMedia('(hover: none)').matches;
+      var isOpen = adminEntry.classList.contains('admin-entry-open');
+      var pointerOnIcon = isPointerInsideIcon(event);
+      if (!pointerOnIcon && isDocked()) {
+        event.preventDefault();
+        revealEntry();
+        return;
+      }
+      if (isCoarsePointer && isDocked() && !isOpen) {
+        event.preventDefault();
+        revealEntry();
+        return;
+      }
+      if (pointerOnIcon) {
+        event.preventDefault();
+        window.location.href = adminEntry.href;
+      }
+    });
     var params = new URLSearchParams(window.location.search);
     var token = params.get('eo_token');
     var time = params.get('eo_time');
     if (token && time) {
       adminEntry.href = '/gold-api/admin?eo_token=' + encodeURIComponent(token) + '&eo_time=' + encodeURIComponent(time);
     }
+    restorePosition();
   })();
 </script>
-<script src="js/app.js?v=seamless-cert-carousel-20260701"></script>
+<script src="js/app.js?v=silver-price-display-20260702"></script>
 </body>
 </html>
 

@@ -5,6 +5,8 @@ const ADMIN_ACCOUNT_KEY = 'zhengji_gold_admin_account';
 const SUPER_ADMIN_PHONE = '18189182920';
 const DEFAULT_SALE_PRICE = 1130;
 const DEFAULT_BUYBACK_PRICE = 1026.5;
+const DEFAULT_SILVER_SALE_PRICE = 13.5;
+const DEFAULT_SILVER_BUYBACK_PRICE = 12.5;
 
 let memoryPrice = null;
 let memoryAdminAccounts = null;
@@ -79,9 +81,13 @@ function getEnvValue(dependencies, key, fallback) {
 function getDefaultPrice(dependencies = {}, now = new Date()) {
   const sale = Number(getEnvValue(dependencies, 'ZHENGJI_DEFAULT_SALE_PRICE', DEFAULT_SALE_PRICE));
   const buyback = Number(getEnvValue(dependencies, 'ZHENGJI_DEFAULT_BUYBACK_PRICE', DEFAULT_BUYBACK_PRICE));
+  const silverSale = Number(getEnvValue(dependencies, 'ZHENGJI_DEFAULT_SILVER_SALE_PRICE', DEFAULT_SILVER_SALE_PRICE));
+  const silverBuyback = Number(getEnvValue(dependencies, 'ZHENGJI_DEFAULT_SILVER_BUYBACK_PRICE', DEFAULT_SILVER_BUYBACK_PRICE));
   return {
     sale_price: Number.isFinite(sale) ? sale : DEFAULT_SALE_PRICE,
     buyback_price: Number.isFinite(buyback) ? buyback : DEFAULT_BUYBACK_PRICE,
+    silver_sale_price: Number.isFinite(silverSale) ? silverSale : DEFAULT_SILVER_SALE_PRICE,
+    silver_buyback_price: Number.isFinite(silverBuyback) ? silverBuyback : DEFAULT_SILVER_BUYBACK_PRICE,
     update_time: formatBeijingDateTime(now),
     updated_by: 'default',
   };
@@ -99,13 +105,19 @@ function normalizePrice(raw, now = new Date()) {
 
   const sale = Number(raw.sale_price);
   const buyback = Number(raw.buyback_price);
-  if (!Number.isFinite(sale) || !Number.isFinite(buyback) || sale <= 0 || buyback <= 0) {
+  const silverSale = raw.silver_sale_price == null ? DEFAULT_SILVER_SALE_PRICE : Number(raw.silver_sale_price);
+  const silverBuyback = raw.silver_buyback_price == null ? DEFAULT_SILVER_BUYBACK_PRICE : Number(raw.silver_buyback_price);
+  if (!Number.isFinite(sale) || !Number.isFinite(buyback) ||
+      !Number.isFinite(silverSale) || !Number.isFinite(silverBuyback) ||
+      sale <= 0 || buyback <= 0 || silverSale <= 0 || silverBuyback <= 0) {
     return null;
   }
 
   return {
     sale_price: sale,
     buyback_price: buyback,
+    silver_sale_price: silverSale,
+    silver_buyback_price: silverBuyback,
     update_time: raw.update_time || formatBeijingDateTime(now),
     updated_by: raw.updated_by || 'admin',
   };
@@ -250,6 +262,8 @@ function publicPricePayload(price) {
   return {
     sale_price: Number(price.sale_price).toFixed(2),
     buyback_price: Number(price.buyback_price).toFixed(2),
+    silver_sale_price: Number(price.silver_sale_price).toFixed(2),
+    silver_buyback_price: Number(price.silver_buyback_price).toFixed(2),
     update_time: price.update_time,
   };
 }
@@ -361,6 +375,10 @@ function adminPage(requestUrl = '') {
     <input id="sale-price" name="sale_price" inputmode="decimal" required>
     <label for="buyback-price">\u56de\u8d2d\u91d1\u4ef7\uff08\u5143/\u514b\uff09</label>
     <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
+    <label for="silver-sale-price">\u4eca\u65e5\u94f6\u4ef7\uff08\u5143/\u514b\uff09</label>
+    <input id="silver-sale-price" name="silver_sale_price" inputmode="decimal" required>
+    <label for="silver-buyback-price">\u56de\u8d2d\u94f6\u4ef7\uff08\u5143/\u514b\uff09</label>
+    <input id="silver-buyback-price" name="silver_buyback_price" inputmode="decimal" required>
     <button class="submit" type="submit">\u4fdd\u5b58\u91d1\u4ef7</button>
   </form>
   <section class="account-table" id="account-table" hidden>
@@ -398,6 +416,8 @@ const accountTable = document.getElementById('account-table');
 const accountTableBody = document.getElementById('account-table-body');
 const saleInput = document.getElementById('sale-price');
 const buybackInput = document.getElementById('buyback-price');
+const silverSaleInput = document.getElementById('silver-sale-price');
+const silverBuybackInput = document.getElementById('silver-buyback-price');
 const edgeOnePreviewToken = ${JSON.stringify(previewToken)};
 const edgeOnePreviewTime = ${JSON.stringify(previewTime)};
 let loggedInPhone = '';
@@ -462,6 +482,8 @@ async function loadPrice() {
   if (json.code !== 1) throw new Error(json.message || '\u8bfb\u53d6\u5931\u8d25');
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
+  silverSaleInput.value = json.data.silver_sale_price;
+  silverBuybackInput.value = json.data.silver_buyback_price;
 }
 
 document.getElementById('login-form').addEventListener('submit', async (event) => {
@@ -483,6 +505,8 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
     loggedInPassword = password;
     saleInput.value = json.data.sale_price;
     buybackInput.value = json.data.buyback_price;
+    silverSaleInput.value = json.data.silver_sale_price;
+    silverBuybackInput.value = json.data.silver_buyback_price;
     showLoggedIn(json);
     setStatus('\u767b\u5f55\u6210\u529f\uff0c\u5f53\u524d\u66f4\u65b0\u65f6\u95f4\uff1a' + json.data.update_time);
   } catch (error) {
@@ -502,6 +526,8 @@ document.getElementById('login-price-form').addEventListener('submit', async (ev
         password: loggedInPassword,
         sale_price: saleInput.value,
         buyback_price: buybackInput.value,
+        silver_sale_price: silverSaleInput.value,
+        silver_buyback_price: silverBuybackInput.value,
       }),
     });
     if (json.code !== 1) {
@@ -510,6 +536,8 @@ document.getElementById('login-price-form').addEventListener('submit', async (ev
     }
     saleInput.value = json.data.sale_price;
     buybackInput.value = json.data.buyback_price;
+    silverSaleInput.value = json.data.silver_sale_price;
+    silverBuybackInput.value = json.data.silver_buyback_price;
     setStatus('\u5df2\u4fdd\u5b58\uff1a' + json.data.update_time);
   } catch (error) {
     setStatus(error.message || '\u4fdd\u5b58\u5931\u8d25');
@@ -678,12 +706,14 @@ export async function handleApiRequest(request, dependencies = {}) {
         const price = normalizePrice({
           sale_price: body.sale_price,
           buyback_price: body.buyback_price,
+          silver_sale_price: body.silver_sale_price,
+          silver_buyback_price: body.silver_buyback_price,
           update_time: formatBeijingDateTime(now),
           updated_by: auth.account.phone,
         }, now);
 
         if (!price) {
-          return json({ code: 0, message: '\u8bf7\u8f93\u5165\u6709\u6548\u7684\u4eca\u65e5\u91d1\u4ef7\u548c\u56de\u8d2d\u91d1\u4ef7' }, 400);
+          return json({ code: 0, message: '\u8bf7\u8f93\u5165\u6709\u6548\u7684\u91d1\u4ef7\u548c\u94f6\u4ef7' }, 400);
         }
 
         await saveFixedPrice(storage, price);

@@ -14,6 +14,8 @@ const certificates = [
   'lbma-silver.jpg',
   'lbma-gold.jpg',
   'lppm-palladium.jpg',
+  'yuexin-precious-metals.png',
+  'yuexin-gold-investment.png',
 ];
 
 if (!html.includes('class="certificate-carousel"') || !html.includes('aria-label="资质证书播放"')) {

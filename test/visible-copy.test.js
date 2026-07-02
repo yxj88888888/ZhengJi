@@ -33,11 +33,13 @@ for (const marker of mojibakeMarkers) {
 const expectedHtmlCopy = [
   '今日金价',
   '回购金价',
+  '今日银价',
+  '回购银价',
   '元/克',
   '交易时间 10:00 至 20:00',
   '价格以门店最新调整为准',
   '粤鑫金',
-  '店铺地址：西部黄金珠宝城二楼西部郑记对面',
+  '店铺地址：西部黄金珠宝城二楼2025铺（西部郑记对面）',
 ];
 
 for (const text of expectedHtmlCopy) {
@@ -63,6 +65,8 @@ const expectedAdminCopy = [
   '返回金价页面',
   '登录后台',
   '保存金价',
+  '今日银价',
+  '回购银价',
   '设置手机号权限',
   '当前账号',
   '职位',

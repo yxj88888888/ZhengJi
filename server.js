@@ -20,6 +20,8 @@ const YUEXIN_MARKUP_START_MINUTE = 15 * 60 + 30;
 const YUEXIN_MARKUP_END_MINUTE = 20 * 60;
 const DEFAULT_FIXED_SALE_PRICE = Number(process.env.ZHENGJI_DEFAULT_SALE_PRICE || 1130);
 const DEFAULT_FIXED_BUYBACK_PRICE = Number(process.env.ZHENGJI_DEFAULT_BUYBACK_PRICE || 1026.5);
+const DEFAULT_FIXED_SILVER_SALE_PRICE = Number(process.env.ZHENGJI_DEFAULT_SILVER_SALE_PRICE || 13.5);
+const DEFAULT_FIXED_SILVER_BUYBACK_PRICE = Number(process.env.ZHENGJI_DEFAULT_SILVER_BUYBACK_PRICE || 12.5);
 const SUPER_ADMIN_PHONE = '18189182920';
 
 // ========== 微信公众号配置 ==========
@@ -58,13 +60,19 @@ function normalizeFixedPrice(raw) {
 
   const sale = Number(raw.sale_price);
   const buyback = Number(raw.buyback_price);
-  if (!Number.isFinite(sale) || !Number.isFinite(buyback) || sale <= 0 || buyback <= 0) {
+  const silverSale = raw.silver_sale_price == null ? DEFAULT_FIXED_SILVER_SALE_PRICE : Number(raw.silver_sale_price);
+  const silverBuyback = raw.silver_buyback_price == null ? DEFAULT_FIXED_SILVER_BUYBACK_PRICE : Number(raw.silver_buyback_price);
+  if (!Number.isFinite(sale) || !Number.isFinite(buyback) ||
+      !Number.isFinite(silverSale) || !Number.isFinite(silverBuyback) ||
+      sale <= 0 || buyback <= 0 || silverSale <= 0 || silverBuyback <= 0) {
     return null;
   }
 
   return {
     sale_price: sale,
     buyback_price: buyback,
+    silver_sale_price: silverSale,
+    silver_buyback_price: silverBuyback,
     update_time: raw.update_time || formatFixedPriceTime()
   };
 }
@@ -76,6 +84,8 @@ function getFixedPrice() {
   return {
     sale_price: Number.isFinite(DEFAULT_FIXED_SALE_PRICE) ? DEFAULT_FIXED_SALE_PRICE : 1130,
     buyback_price: Number.isFinite(DEFAULT_FIXED_BUYBACK_PRICE) ? DEFAULT_FIXED_BUYBACK_PRICE : 1026.5,
+    silver_sale_price: Number.isFinite(DEFAULT_FIXED_SILVER_SALE_PRICE) ? DEFAULT_FIXED_SILVER_SALE_PRICE : 13.5,
+    silver_buyback_price: Number.isFinite(DEFAULT_FIXED_SILVER_BUYBACK_PRICE) ? DEFAULT_FIXED_SILVER_BUYBACK_PRICE : 12.5,
     update_time: formatFixedPriceTime()
   };
 }
@@ -94,6 +104,8 @@ function fixedPricePayload(price) {
   return {
     sale_price: Number(price.sale_price).toFixed(2),
     buyback_price: Number(price.buyback_price).toFixed(2),
+    silver_sale_price: Number(price.silver_sale_price).toFixed(2),
+    silver_buyback_price: Number(price.silver_buyback_price).toFixed(2),
     update_time: price.update_time
   };
 }
@@ -305,6 +317,10 @@ function buildGoldAdminPage() {
     <input id="sale-price" name="sale_price" inputmode="decimal" required>
     <label for="buyback-price">\u56de\u8d2d\u91d1\u4ef7\uff08\u5143/\u514b\uff09</label>
     <input id="buyback-price" name="buyback_price" inputmode="decimal" required>
+    <label for="silver-sale-price">\u4eca\u65e5\u94f6\u4ef7\uff08\u5143/\u514b\uff09</label>
+    <input id="silver-sale-price" name="silver_sale_price" inputmode="decimal" required>
+    <label for="silver-buyback-price">\u56de\u8d2d\u94f6\u4ef7\uff08\u5143/\u514b\uff09</label>
+    <input id="silver-buyback-price" name="silver_buyback_price" inputmode="decimal" required>
     <button class="submit" type="submit">\u4fdd\u5b58\u91d1\u4ef7</button>
   </form>
   <section class="account-table" id="account-table" hidden>
@@ -342,6 +358,8 @@ const accountTable = document.getElementById('account-table');
 const accountTableBody = document.getElementById('account-table-body');
 const saleInput = document.getElementById('sale-price');
 const buybackInput = document.getElementById('buyback-price');
+const silverSaleInput = document.getElementById('silver-sale-price');
+const silverBuybackInput = document.getElementById('silver-buyback-price');
 const edgeOnePreviewToken = ${JSON.stringify(previewToken)};
 const edgeOnePreviewTime = ${JSON.stringify(previewTime)};
 let loggedInPhone = '';
@@ -406,6 +424,8 @@ async function loadPrice() {
   if (json.code !== 1) throw new Error(json.message || '\u8bfb\u53d6\u5931\u8d25');
   saleInput.value = json.data.sale_price;
   buybackInput.value = json.data.buyback_price;
+  silverSaleInput.value = json.data.silver_sale_price;
+  silverBuybackInput.value = json.data.silver_buyback_price;
 }
 
 document.getElementById('login-form').addEventListener('submit', async (event) => {
@@ -427,6 +447,8 @@ document.getElementById('login-form').addEventListener('submit', async (event) =
     loggedInPassword = password;
     saleInput.value = json.data.sale_price;
     buybackInput.value = json.data.buyback_price;
+    silverSaleInput.value = json.data.silver_sale_price;
+    silverBuybackInput.value = json.data.silver_buyback_price;
     showLoggedIn(json);
     setStatus('\u767b\u5f55\u6210\u529f\uff0c\u5f53\u524d\u66f4\u65b0\u65f6\u95f4\uff1a' + json.data.update_time);
   } catch (error) {
@@ -446,6 +468,8 @@ document.getElementById('login-price-form').addEventListener('submit', async (ev
         password: loggedInPassword,
         sale_price: saleInput.value,
         buyback_price: buybackInput.value,
+        silver_sale_price: silverSaleInput.value,
+        silver_buyback_price: silverBuybackInput.value,
       }),
     });
     if (json.code !== 1) {
@@ -454,6 +478,8 @@ document.getElementById('login-price-form').addEventListener('submit', async (ev
     }
     saleInput.value = json.data.sale_price;
     buybackInput.value = json.data.buyback_price;
+    silverSaleInput.value = json.data.silver_sale_price;
+    silverBuybackInput.value = json.data.silver_buyback_price;
     setStatus('\u5df2\u4fdd\u5b58\uff1a' + json.data.update_time);
   } catch (error) {
     setStatus(error.message || '\u4fdd\u5b58\u5931\u8d25');
@@ -1106,11 +1132,13 @@ app.post('/gold-api/admin/price', (req, res) => {
 
   const saved = saveFixedPrice({
     sale_price: req.body.sale_price,
-    buyback_price: req.body.buyback_price
+    buyback_price: req.body.buyback_price,
+    silver_sale_price: req.body.silver_sale_price,
+    silver_buyback_price: req.body.silver_buyback_price
   });
 
   if (!saved) {
-    res.status(400).json({ code: 0, message: '\u8bf7\u8f93\u5165\u6709\u6548\u7684\u4eca\u65e5\u91d1\u4ef7\u548c\u56de\u8d2d\u91d1\u4ef7' });
+    res.status(400).json({ code: 0, message: '\u8bf7\u8f93\u5165\u6709\u6548\u7684\u91d1\u4ef7\u548c\u94f6\u4ef7' });
     return;
   }
 

@@ -41,7 +41,7 @@ if (!/\.header-center\s*\{[\s\S]*transform:\s*none/.test(mobileBlock)) {
 if (!/\.logo-section\s*\{[\s\S]*justify-content:\s*center/.test(mobileBlock)) {
   throw new Error('Narrow logo row should be centered');
 }
-if (!/\.header-qr-card\s*\{[\s\S]*width:\s*min\(58vw,\s*285px\)/.test(mobileBlock)) {
+if (!/\.header-qr-card\s*\{[\s\S]*width:\s*min\(58vw,\s*360px\)/.test(mobileBlock)) {
   throw new Error('Narrow header should shrink QR card width with viewport');
 }
 
@@ -53,7 +53,7 @@ if (/flex-direction:\s*column/.test(tinyHeaderInnerRule)) {
 if (!/\.header-inner\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+auto/.test(tinyBlock)) {
   throw new Error('Tiny header should still use a flexible two-column row');
 }
-if (!/\.header-qr-card\s*\{[\s\S]*width:\s*clamp\(106px,\s*30vw,\s*126px\)[\s\S]*flex-direction:\s*column/.test(tinyBlock)) {
+if (!/\.header-qr-card\s*\{[\s\S]*width:\s*clamp\(112px,\s*34vw,\s*152px\)[\s\S]*flex-direction:\s*column/.test(tinyBlock)) {
   throw new Error('Tiny header should keep the QR prompt inside a narrow vertical card');
 }
 if (!/\.header-center\s*\{[\s\S]*transform:\s*none/.test(tinyBlock)) {

@@ -82,8 +82,11 @@ function createLegacyBlob(initial = new Map()) {
   if (currentResponse.status !== 200 || currentPayload.code !== 1) {
     throw new Error('Expected the public current price API to succeed');
   }
-  if (currentPayload.data.sale_price !== '1130.00' || currentPayload.data.buyback_price !== '1026.50') {
-    throw new Error('Expected current price API to return the default fixed price');
+  if (currentPayload.data.sale_price !== '1130.00' ||
+      currentPayload.data.buyback_price !== '1026.50' ||
+      currentPayload.data.silver_sale_price !== '13.50' ||
+      currentPayload.data.silver_buyback_price !== '12.50') {
+    throw new Error('Expected current price API to return the default fixed gold and silver prices');
   }
 
   const adminPageResponse = await edgeFunction.handleApiRequest(
@@ -96,6 +99,8 @@ function createLegacyBlob(initial = new Map()) {
   }
   if (!adminHtml.includes('id="login-form"') ||
       !adminHtml.includes('id="login-price-form" hidden') ||
+      !adminHtml.includes('id="silver-sale-price"') ||
+      !adminHtml.includes('id="silver-buyback-price"') ||
       !adminHtml.includes('/gold-api/admin/login')) {
     throw new Error('Expected admin page to hide price editor until login succeeds');
   }
@@ -138,6 +143,8 @@ function createLegacyBlob(initial = new Map()) {
         password: 'abc123',
         sale_price: '1168.88',
         buyback_price: '1055.66',
+        silver_sale_price: '15.88',
+        silver_buyback_price: '14.66',
       }),
     }),
     dependencies
@@ -221,6 +228,8 @@ function createLegacyBlob(initial = new Map()) {
         password: 'wrong-password',
         sale_price: '1168.88',
         buyback_price: '1055.66',
+        silver_sale_price: '15.88',
+        silver_buyback_price: '14.66',
       }),
     }),
     dependencies
@@ -238,6 +247,8 @@ function createLegacyBlob(initial = new Map()) {
         password: 'abc123',
         sale_price: '1168.88',
         buyback_price: '1055.66',
+        silver_sale_price: '15.88',
+        silver_buyback_price: '14.66',
       }),
     }),
     dependencies
@@ -246,8 +257,11 @@ function createLegacyBlob(initial = new Map()) {
   if (saveResponse.status !== 200 || savePayload.code !== 1) {
     throw new Error('Expected authorized admin price save to succeed');
   }
-  if (savePayload.data.sale_price !== '1168.88' || savePayload.data.buyback_price !== '1055.66') {
-    throw new Error('Expected admin save to return normalized fixed prices');
+  if (savePayload.data.sale_price !== '1168.88' ||
+      savePayload.data.buyback_price !== '1055.66' ||
+      savePayload.data.silver_sale_price !== '15.88' ||
+      savePayload.data.silver_buyback_price !== '14.66') {
+    throw new Error('Expected admin save to return normalized fixed gold and silver prices');
   }
 
   const adminPriceResponse = await edgeFunction.handleApiRequest(
@@ -266,7 +280,10 @@ function createLegacyBlob(initial = new Map()) {
     dependencies
   );
   const afterSavePayload = await afterSaveResponse.json();
-  if (afterSavePayload.data.sale_price !== '1168.88' || afterSavePayload.data.buyback_price !== '1055.66') {
+  if (afterSavePayload.data.sale_price !== '1168.88' ||
+      afterSavePayload.data.buyback_price !== '1055.66' ||
+      afterSavePayload.data.silver_sale_price !== '15.88' ||
+      afterSavePayload.data.silver_buyback_price !== '14.66') {
     throw new Error('Expected public current price to use the saved admin value');
   }
 
@@ -312,6 +329,8 @@ function createLegacyBlob(initial = new Map()) {
         password: 'abc123',
         sale_price: 'abc',
         buyback_price: '1055.66',
+        silver_sale_price: '15.88',
+        silver_buyback_price: '14.66',
       }),
     }),
     dependencies
@@ -371,6 +390,8 @@ function createLegacyBlob(initial = new Map()) {
         password: 'blob123',
         sale_price: '1177.00',
         buyback_price: '1066.00',
+        silver_sale_price: '16.00',
+        silver_buyback_price: '15.00',
       }),
     }),
     blobDependencies

@@ -50,16 +50,30 @@ if (portraitStart === -1) {
 }
 const portraitNext = css.indexOf('\n@media', portraitStart + portraitMarker.length);
 const portraitBlock = css.slice(portraitStart, portraitNext === -1 ? css.length : portraitNext);
-if (!/\.price-combo-card\s*\{[\s\S]*grid-template-columns:\s*1fr/.test(portraitBlock)) {
-  throw new Error('Portrait signage layout should stack the two price cards');
+if (!/\.price-combo-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)[\s\S]*grid-template-rows:\s*repeat\(2,\s*minmax\(151px,\s*auto\)\)/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should enlarge the four-grid price area');
 }
-if (!/\.certificate-carousel\s*\{[\s\S]*flex:\s*1\s+1\s+auto[\s\S]*aspect-ratio:\s*auto[\s\S]*height:\s*clamp\(320px,\s*40vh,\s*820px\)/.test(portraitBlock)) {
-  throw new Error('Portrait signage layout should size certificate display from available height');
+if (!/\.certificate-carousel\s*\{[\s\S]*flex:\s*0\s+1\s+auto[\s\S]*aspect-ratio:\s*auto[\s\S]*height:\s*clamp\(224px,\s*28vh,\s*574px\)[\s\S]*max-height:\s*30vh/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should shrink certificate display to preserve one-page browsing');
+}
+if (!/\.page-section\.active\s*\{[\s\S]*gap:\s*clamp\(8px,\s*0\.9vh,\s*14px\)[\s\S]*justify-content:\s*flex-end/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should keep market content anchored to the bottom');
+}
+if (!/\.fixed-price-note\s*\{[\s\S]*min-height:\s*clamp\(52px,\s*6vh,\s*82px\)[\s\S]*font-size:\s*clamp\(18px,\s*2\.75vw,\s*34px\)/.test(portraitBlock)) {
+  throw new Error('Portrait bottom note should scale up with its text');
 }
 if (!/\.header-address\s*\{[\s\S]*transform:\s*none/.test(portraitBlock)) {
   throw new Error('Portrait signage layout should keep the address in normal flow');
 }
-if (!/\.admin-entry-link\s*\{[\s\S]*top:\s*clamp\(126px,\s*10\.6vh,\s*180px\)[\s\S]*bottom:\s*auto/.test(portraitBlock)) {
+if (!/grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"qr time"[\s\S]*"address address"/.test(portraitBlock)) {
+  throw new Error('Portrait signage header should keep QR, logo, and time in a compact layout');
+}
+if (!/\.logo-section\s*\{[\s\S]*align-self:\s*end[\s\S]*transform:\s*translateY\(clamp\(8px,\s*1\.05vh,\s*14px\)\)/.test(portraitBlock) ||
+    !/\.logo-circle\s*\{[\s\S]*width:\s*clamp\(92px,\s*10\.5vh,\s*132px\)/.test(portraitBlock) ||
+    !/\.logo-title\s*\{[\s\S]*font-size:\s*clamp\(48px,\s*7\.8vw,\s*76px\)/.test(portraitBlock)) {
+  throw new Error('Portrait signage logo should scale up and sit close to the date row');
+}
+if (!/\.admin-entry-link\s*\{[\s\S]*top:\s*clamp\(70px,\s*8vh,\s*105px\)[\s\S]*bottom:\s*auto/.test(portraitBlock)) {
   throw new Error('Portrait signage layout should keep the admin entry clear of market content');
 }
 

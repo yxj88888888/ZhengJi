@@ -13,6 +13,8 @@ const expectedSnippets = [
   'function requireAuthorizedAccount',
   'id="login-form"',
   'id="login-price-form" hidden',
+  'id="silver-sale-price"',
+  'id="silver-buyback-price"',
   'id="grant-form" hidden',
   'id="account-table" hidden',
   'can_manage_users',
@@ -24,6 +26,8 @@ const expectedSnippets = [
   'admin_password: loggedInPassword',
   "requestJson('/gold-api/admin/bind'",
   "requestJson('/gold-api/admin/price'",
+  'silver_sale_price: silverSaleInput.value',
+  'silver_buyback_price: silverBuybackInput.value',
   'loadPrice().catch',
 ];
 

@@ -1,12 +1,16 @@
-/* ===== 粤鑫金价 - 固定金价展示 ===== */
+﻿/* ===== 粤鑫金价格 - 固定金银价展示 ===== */
 
 let currentGold = null;
 let prevSalePrice = null;
 let prevBuybackPrice = null;
+let prevSilverSalePrice = null;
+let prevSilverBuybackPrice = null;
 
 const fallbackGold = {
   sale_price: '1130.00',
   buyback_price: '1026.50',
+  silver_sale_price: '13.50',
+  silver_buyback_price: '12.50',
   update_time: '静态预览',
 };
 
@@ -41,7 +45,10 @@ function updatePriceDisplay() {
 
   const newSale = Number(currentGold.sale_price);
   const newBuyback = Number(currentGold.buyback_price);
-  if (!Number.isFinite(newSale) || !Number.isFinite(newBuyback)) return;
+  const newSilverSale = Number(currentGold.silver_sale_price);
+  const newSilverBuyback = Number(currentGold.silver_buyback_price);
+  if (!Number.isFinite(newSale) || !Number.isFinite(newBuyback) ||
+      !Number.isFinite(newSilverSale) || !Number.isFinite(newSilverBuyback)) return;
 
   if (prevSalePrice !== null && prevSalePrice !== newSale) {
     triggerPriceTick('current-price', prevSalePrice, newSale);
@@ -49,14 +56,23 @@ function updatePriceDisplay() {
   if (prevBuybackPrice !== null && prevBuybackPrice !== newBuyback) {
     triggerPriceTick('buyback-price', prevBuybackPrice, newBuyback);
   }
+  if (prevSilverSalePrice !== null && prevSilverSalePrice !== newSilverSale) {
+    triggerPriceTick('silver-sale-price', prevSilverSalePrice, newSilverSale);
+  }
+  if (prevSilverBuybackPrice !== null && prevSilverBuybackPrice !== newSilverBuyback) {
+    triggerPriceTick('silver-buyback-price', prevSilverBuybackPrice, newSilverBuyback);
+  }
 
   prevSalePrice = newSale;
   prevBuybackPrice = newBuyback;
+  prevSilverSalePrice = newSilverSale;
+  prevSilverBuybackPrice = newSilverBuyback;
 
   setText('current-price', newSale.toFixed(2));
   setText('buyback-price', newBuyback.toFixed(2));
+  setText('silver-sale-price', newSilverSale.toFixed(2));
+  setText('silver-buyback-price', newSilverBuyback.toFixed(2));
   setText('header-datetime', formatHeaderDateTime());
-
 }
 
 async function fetchGoldCurrent() {
