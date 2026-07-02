@@ -27,6 +27,7 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -813,7 +814,7 @@ body {
   }
   .page-section.active {
     gap: clamp(8px, 0.9vh, 14px);
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
   .price-hero {
     margin-bottom: 0;
@@ -882,7 +883,7 @@ body {
   }
 }
 
-@media (orientation: portrait) and (min-width: 650px) and (max-width: 760px) and (min-height: 1100px) and (max-aspect-ratio: 0.62) {
+@media (orientation: portrait) and (min-width: 650px) and (max-width: 760px) and (min-height: 1040px) and (max-aspect-ratio: 0.68) {
   .header-bar {
     padding: clamp(8px, 0.75vh, 10px) clamp(22px, 4vw, 34px) clamp(6px, 0.65vh, 9px);
   }

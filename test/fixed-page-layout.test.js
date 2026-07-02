@@ -17,10 +17,11 @@ if (!/height\s*:\s*100%/.test(htmlRule) || !/overflow\s*:\s*hidden/.test(htmlRul
 
 const bodyRule = ruleFor('body');
 if (!/height\s*:\s*100vh/.test(bodyRule) ||
+    !/height\s*:\s*100dvh/.test(bodyRule) ||
     !/overflow\s*:\s*hidden/.test(bodyRule) ||
     !/display\s*:\s*flex/.test(bodyRule) ||
     !/flex-direction\s*:\s*column/.test(bodyRule)) {
-  throw new Error('Body should be a fixed one-page vertical flex layout');
+  throw new Error('Body should be a fixed one-page vertical flex layout using the visible TV viewport');
 }
 
 const mainRule = ruleFor('.main-container');
@@ -56,8 +57,8 @@ if (!/\.price-combo-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\
 if (!/\.certificate-carousel\s*\{[\s\S]*flex:\s*0\s+1\s+auto[\s\S]*aspect-ratio:\s*auto[\s\S]*height:\s*clamp\(224px,\s*28vh,\s*574px\)[\s\S]*max-height:\s*30vh/.test(portraitBlock)) {
   throw new Error('Portrait signage layout should shrink certificate display to preserve one-page browsing');
 }
-if (!/\.page-section\.active\s*\{[\s\S]*gap:\s*clamp\(8px,\s*0\.9vh,\s*14px\)[\s\S]*justify-content:\s*flex-end/.test(portraitBlock)) {
-  throw new Error('Portrait signage layout should keep market content anchored to the bottom');
+if (!/\.page-section\.active\s*\{[\s\S]*gap:\s*clamp\(8px,\s*0\.9vh,\s*14px\)[\s\S]*justify-content:\s*flex-start/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should place market content directly below the header');
 }
 if (!/\.fixed-price-note\s*\{[\s\S]*min-height:\s*clamp\(52px,\s*6vh,\s*82px\)[\s\S]*font-size:\s*clamp\(18px,\s*2\.75vw,\s*34px\)/.test(portraitBlock)) {
   throw new Error('Portrait bottom note should scale up with its text');
@@ -77,7 +78,7 @@ if (!/\.admin-entry-link\s*\{[\s\S]*top:\s*clamp\(70px,\s*8vh,\s*105px\)[\s\S]*b
   throw new Error('Portrait signage layout should keep the admin entry clear of market content');
 }
 
-const tvPortraitMarker = '@media (orientation: portrait) and (min-width: 650px) and (max-width: 760px) and (min-height: 1100px) and (max-aspect-ratio: 0.62)';
+const tvPortraitMarker = '@media (orientation: portrait) and (min-width: 650px) and (max-width: 760px) and (min-height: 1040px) and (max-aspect-ratio: 0.68)';
 const tvPortraitStart = css.indexOf(tvPortraitMarker);
 if (tvPortraitStart === -1) {
   throw new Error('Expected a dedicated 70:120 portrait TV layout media query');
