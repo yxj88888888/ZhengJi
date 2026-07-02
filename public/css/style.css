@@ -882,6 +882,113 @@ body {
   }
 }
 
+@media (orientation: portrait) and (min-width: 650px) and (max-width: 760px) and (min-height: 1100px) and (max-aspect-ratio: 0.62) {
+  .header-bar {
+    padding: clamp(8px, 0.75vh, 10px) clamp(22px, 4vw, 34px) clamp(6px, 0.65vh, 9px);
+  }
+  .header-inner {
+    grid-template-columns: minmax(210px, 0.55fr) minmax(0, 1fr);
+    gap: clamp(3px, 0.36vh, 6px) clamp(18px, 3.4vw, 28px);
+  }
+  .header-qr-card {
+    width: clamp(214px, 32vw, 236px);
+    min-height: clamp(236px, 22.5vh, 270px);
+    padding: clamp(8px, 0.76vh, 10px);
+    gap: clamp(5px, 0.45vh, 7px);
+  }
+  .header-qr-img {
+    width: clamp(150px, 13.8vh, 166px);
+    height: clamp(150px, 13.8vh, 166px);
+    flex-basis: clamp(150px, 13.8vh, 166px);
+  }
+  .header-qr-title {
+    font-size: clamp(40px, 6vw, 48px);
+    line-height: 1.05;
+  }
+  .logo-section {
+    transform: translateY(clamp(6px, 0.65vh, 9px));
+  }
+  .logo-circle {
+    width: clamp(104px, 10vh, 120px);
+    height: clamp(104px, 10vh, 120px);
+  }
+  .logo-title {
+    font-size: clamp(58px, 8.8vw, 68px);
+  }
+  .header-time {
+    padding: clamp(5px, 0.52vh, 7px) clamp(14px, 2.35vw, 20px);
+    font-size: clamp(29px, 4.45vw, 35px);
+  }
+  .header-address {
+    font-size: clamp(23px, 3.55vw, 28px);
+  }
+  .main-container {
+    padding: clamp(8px, 0.82vh, 10px) clamp(24px, 4vw, 34px) clamp(10px, 0.95vh, 12px);
+  }
+  .page-section.active {
+    gap: clamp(9px, 0.9vh, 12px);
+    justify-content: flex-start;
+  }
+  .price-combo-card {
+    grid-template-rows: repeat(2, minmax(184px, auto));
+    border-width: 2px;
+    border-radius: 22px;
+  }
+  .price-combo-card::before {
+    height: 4px;
+  }
+  .price-combo-card::after {
+    width: 4px;
+  }
+  .price-card {
+    padding: clamp(18px, 1.8vh, 22px) clamp(12px, 1.8vw, 16px);
+  }
+  .sale-card,
+  .buyback-card {
+    padding-right: clamp(20px, 3vw, 26px);
+  }
+  .silver-sale-card,
+  .silver-buyback-card {
+    padding-left: clamp(20px, 3vw, 26px);
+  }
+  .price-label {
+    font-size: clamp(29px, 4.3vw, 34px);
+    margin-bottom: clamp(9px, 0.9vh, 12px);
+  }
+  .price-label::before {
+    width: clamp(11px, 1.35vw, 13px);
+    height: clamp(36px, 4.85vw, 44px);
+  }
+  .price-value-wrap {
+    gap: 4px;
+  }
+  .price-value {
+    font-size: clamp(60px, 9.05vw, 66px);
+    letter-spacing: 0;
+  }
+  .price-unit {
+    font-size: clamp(17px, 2.7vw, 20px);
+  }
+  .certificate-carousel {
+    height: clamp(310px, 29.5vh, 354px);
+    max-height: 29.5vh;
+    border-radius: 16px;
+  }
+  .certificate-slide {
+    padding: clamp(8px, 1.35vw, 14px);
+  }
+  .fixed-price-note {
+    min-height: clamp(58px, 5.9vh, 72px);
+    padding: clamp(12px, 1.25vh, 15px) clamp(18px, 2.8vw, 24px);
+    font-size: clamp(20px, 3.2vw, 25px);
+  }
+  .admin-entry-link {
+    top: clamp(80px, 7.6vh, 92px);
+    width: 58px;
+    height: 58px;
+  }
+}
+
 /* ===== 闂ㄥ簵灞曠ず ===== */
 .store-header {
   display: flex; justify-content: space-between; align-items: center;

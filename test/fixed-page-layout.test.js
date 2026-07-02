@@ -77,6 +77,29 @@ if (!/\.admin-entry-link\s*\{[\s\S]*top:\s*clamp\(70px,\s*8vh,\s*105px\)[\s\S]*b
   throw new Error('Portrait signage layout should keep the admin entry clear of market content');
 }
 
+const tvPortraitMarker = '@media (orientation: portrait) and (min-width: 650px) and (max-width: 760px) and (min-height: 1100px) and (max-aspect-ratio: 0.62)';
+const tvPortraitStart = css.indexOf(tvPortraitMarker);
+if (tvPortraitStart === -1) {
+  throw new Error('Expected a dedicated 70:120 portrait TV layout media query');
+}
+const tvPortraitNext = css.indexOf('\n@media', tvPortraitStart + tvPortraitMarker.length);
+const tvPortraitBlock = css.slice(tvPortraitStart, tvPortraitNext === -1 ? css.length : tvPortraitNext);
+if (!/\.page-section\.active\s*\{[\s\S]*gap:\s*clamp\(9px,\s*0\.9vh,\s*12px\)[\s\S]*justify-content:\s*flex-start/.test(tvPortraitBlock)) {
+  throw new Error('70:120 TV layout should start content directly below the header');
+}
+if (!/\.price-combo-card\s*\{[\s\S]*grid-template-rows:\s*repeat\(2,\s*minmax\(184px,\s*auto\)\)[\s\S]*border-width:\s*2px/.test(tvPortraitBlock)) {
+  throw new Error('70:120 TV layout should enlarge the four price grid');
+}
+if (!/\.certificate-carousel\s*\{[\s\S]*height:\s*clamp\(310px,\s*29\.5vh,\s*354px\)[\s\S]*max-height:\s*29\.5vh/.test(tvPortraitBlock)) {
+  throw new Error('70:120 TV layout should keep the certificate carousel compact');
+}
+if (!/\.header-qr-img\s*\{[\s\S]*width:\s*clamp\(150px,\s*13\.8vh,\s*166px\)[\s\S]*height:\s*clamp\(150px,\s*13\.8vh,\s*166px\)/.test(tvPortraitBlock)) {
+  throw new Error('70:120 TV layout should keep the QR code large enough to scan');
+}
+if (!/\.fixed-price-note\s*\{[\s\S]*min-height:\s*clamp\(58px,\s*5\.9vh,\s*72px\)[\s\S]*font-size:\s*clamp\(20px,\s*3\.2vw,\s*25px\)/.test(tvPortraitBlock)) {
+  throw new Error('70:120 TV bottom note should remain readable within one page');
+}
+
 const noteRule = ruleFor('.fixed-price-note');
 if (/position\s*:\s*fixed/.test(noteRule) || !/flex\s*:\s*0\s+0\s+auto/.test(noteRule)) {
   throw new Error('Bottom note should live inside the fixed one-page layout, not overlay it');
