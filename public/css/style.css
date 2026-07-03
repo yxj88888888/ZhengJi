@@ -880,8 +880,11 @@ body {
     height: clamp(30px, 3.8vw, 44px);
   }
   .price-value {
-    font-size: clamp(78px, 15vw, 112px);
-    letter-spacing: 0;
+    font-size: clamp(117px, 22.5vw, 168px);
+    letter-spacing: -0.045em;
+    line-height: 0.9;
+    transform: scaleX(0.58);
+    transform-origin: left bottom;
   }
   .price-unit {
     font-size: clamp(18px, 3vw, 24px);
@@ -1001,8 +1004,11 @@ body {
     line-height: 1;
   }
   .price-value {
-    font-size: clamp(96px, 15vw, 116px);
-    letter-spacing: 0;
+    font-size: clamp(144px, 22.5vw, 174px);
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+    transform: scaleX(0.5);
+    transform-origin: left bottom;
   }
   .price-unit {
     font-size: clamp(20px, 3.4vw, 26px);

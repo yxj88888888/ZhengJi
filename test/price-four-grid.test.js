@@ -57,7 +57,7 @@ const portraitMarker = '@media (orientation: portrait) and (min-width: 520px) an
 const portraitStart = css.indexOf(portraitMarker);
 const portraitNext = css.indexOf('\n@media', portraitStart + portraitMarker.length);
 const portraitBlock = css.slice(portraitStart, portraitNext === -1 ? css.length : portraitNext);
-if (!/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(78px,\s*15vw,\s*112px\)/.test(portraitBlock) ||
+if (!/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(117px,\s*22\.5vw,\s*168px\)[\s\S]*transform:\s*scaleX\(0\.58\)/.test(portraitBlock) ||
     !/\.price-unit\s*\{[\s\S]*font-size:\s*clamp\(18px,\s*3vw,\s*24px\)/.test(portraitBlock) ||
     !/\.price-label\s*\{[\s\S]*font-size:\s*clamp\(34px,\s*6\.4vw,\s*52px\)/.test(portraitBlock)) {
   throw new Error('Portrait price text and units should fit fully inside the left grid cells');

@@ -111,7 +111,7 @@ if (!/\.fixed-price-note\s*\{[\s\S]*min-height:\s*clamp\(58px,\s*5\.9vh,\s*72px\
   throw new Error('70:120 TV bottom note should remain readable within one page');
 }
 if (!/\.header-address\s*\{[\s\S]*font-size:\s*clamp\(52px,\s*7\.8vw,\s*60px\)/.test(tvPortraitBlock) ||
-    !/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(96px,\s*15vw,\s*116px\)/.test(tvPortraitBlock) ||
+    !/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(144px,\s*22\.5vw,\s*174px\)[\s\S]*transform:\s*scaleX\(0\.5\)/.test(tvPortraitBlock) ||
     !/\.price-value-wrap\s*\{[\s\S]*flex-direction:\s*column/.test(tvPortraitBlock)) {
   throw new Error('70:120 TV layout should enlarge address and price text with safe maximums');
 }
