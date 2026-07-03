@@ -44,10 +44,10 @@ if (!/\.sale-card\s*\{[\s\S]*padding-right:\s*clamp\(18px,\s*2\.2vw,\s*34px\)/.t
   throw new Error('Left price cells should reserve space before the gold center divider');
 }
 
-if (!/\.silver-sale-card \.price-label\s*\{[\s\S]*color:\s*#ffe1e1/.test(css) ||
+if (!/\.silver-sale-card \.price-label\s*\{[\s\S]*color:\s*var\(--red-price\)/.test(css) ||
     !/\.silver-sale-card \.price-label::before\s*\{[\s\S]*background:\s*var\(--red-price\)/.test(css) ||
     !/\.silver-sale-card \.price-value\s*\{[\s\S]*color:\s*var\(--red-price\)/.test(css) ||
-    !/\.silver-buyback-card \.price-label\s*\{[\s\S]*color:\s*#d8ffed/.test(css) ||
+    !/\.silver-buyback-card \.price-label\s*\{[\s\S]*color:\s*var\(--green-down\)/.test(css) ||
     !/\.silver-buyback-card \.price-label::before\s*\{[\s\S]*background:\s*var\(--green-down\)/.test(css) ||
     !/\.silver-buyback-card \.price-value\s*\{[\s\S]*color:\s*var\(--green-down\)/.test(css)) {
   throw new Error('Silver price cells should use the same colors as matching gold price cells');
@@ -57,13 +57,14 @@ const portraitMarker = '@media (orientation: portrait) and (min-width: 520px) an
 const portraitStart = css.indexOf(portraitMarker);
 const portraitNext = css.indexOf('\n@media', portraitStart + portraitMarker.length);
 const portraitBlock = css.slice(portraitStart, portraitNext === -1 ? css.length : portraitNext);
-if (!/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(60px,\s*11\.6vw,\s*86px\)/.test(portraitBlock) ||
-    !/\.price-unit\s*\{[\s\S]*font-size:\s*clamp\(16px,\s*2\.9vw,\s*22px\)/.test(portraitBlock) ||
-    !/\.price-label\s*\{[\s\S]*font-size:\s*clamp\(30px,\s*5\.4vw,\s*48px\)/.test(portraitBlock)) {
+if (!/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(78px,\s*15vw,\s*112px\)/.test(portraitBlock) ||
+    !/\.price-unit\s*\{[\s\S]*font-size:\s*clamp\(18px,\s*3vw,\s*24px\)/.test(portraitBlock) ||
+    !/\.price-label\s*\{[\s\S]*font-size:\s*clamp\(34px,\s*6\.4vw,\s*52px\)/.test(portraitBlock)) {
   throw new Error('Portrait price text and units should fit fully inside the left grid cells');
 }
 if (!/\.price-hero\s*\{[\s\S]*flex:\s*1\s+1\s+auto/.test(portraitBlock) ||
-    !/grid-template-rows:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(portraitBlock)) {
+    !/grid-template-rows:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(portraitBlock) ||
+    !/\.price-value-wrap\s*\{[\s\S]*flex-direction:\s*column/.test(portraitBlock)) {
   throw new Error('Portrait price grid should expand to fill spare screen space');
 }
 

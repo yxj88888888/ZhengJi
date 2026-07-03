@@ -1,17 +1,17 @@
 ﻿/* ===== 鍩虹鏍峰紡 ===== */
 :root {
-  --bg-primary: #0f1117;
-  --bg-secondary: #161822;
-  --bg-card: #1a1d2e;
-  --gold-primary: #d4a537;
-  --gold-light: #f0d060;
+  --bg-primary: #f4ead8;
+  --bg-secondary: #efe0c3;
+  --bg-card: #fff7e8;
+  --gold-primary: #b9891f;
+  --gold-light: #8f6817;
   --red-price: #ff4d4f;
   --red-up: #e8393a;
   --green-down: #26a65b;
-  --text-primary: #e8e8ed;
-  --text-secondary: #9a9ab0;
-  --text-muted: #6a6a80;
-  --border-color: #2a2d3e;
+  --text-primary: #352615;
+  --text-secondary: #7a684c;
+  --text-muted: #9b8867;
+  --border-color: #d8bd7a;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -35,8 +35,8 @@ body {
 
 /* ===== 椤堕儴鏍?===== */
 .header-bar {
-  background: linear-gradient(135deg, #1a1d2e 0%, #0d0f1a 100%);
-  border-bottom: 1px solid rgba(212, 165, 55, 0.2);
+  background: linear-gradient(135deg, #fff4dc 0%, #ead4a7 100%);
+  border-bottom: 1px solid rgba(185, 137, 31, 0.32);
   padding: clamp(10px, 1.6vw, 21px) clamp(12px, 2.8vw, 36px) clamp(10px, 1.4vw, 18px);
   flex: 0 0 auto;
   position: relative;
@@ -71,8 +71,8 @@ body {
   padding: clamp(8px, 1.15vw, 15px) clamp(10px, 1.4vw, 18px) clamp(8px, 1.15vw, 15px) clamp(8px, 1.15vw, 15px);
   border: 1px solid rgba(212, 165, 55, 0.28);
   border-radius: 12px;
-  background: rgba(22, 24, 34, 0.72);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  background: rgba(255, 249, 236, 0.86);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.58);
 }
 .header-qr-img {
   width: clamp(110px, 10.5vw, 180px);
@@ -140,10 +140,10 @@ body {
   align-items: center;
   justify-content: center;
   padding: clamp(5px, 0.65vw, 8px) clamp(10px, 1.6vw, 21px);
-  border: 1px solid rgba(212, 165, 55, 0.34);
+  border: 1px solid rgba(185, 137, 31, 0.46);
   border-radius: 999px;
-  background: rgba(212, 165, 55, 0.08);
-  color: #f0d060;
+  background: rgba(185, 137, 31, 0.1);
+  color: #6f4d10;
   font-size: clamp(24px, 3.1vw, 40px);
   font-weight: 800;
   text-align: center;
@@ -156,13 +156,29 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .header-address {
-  color: #fff;
+  color: #3b2a14;
   font-size: clamp(24px, 3.6vw, 34px);
   font-weight: 800;
   line-height: 1.05;
   text-align: center;
   transform: translateY(10px);
   white-space: nowrap;
+}
+.address-line {
+  display: block;
+}
+.address-main-line {
+  width: 160%;
+  margin-left: -30%;
+  font-size: 1em;
+  letter-spacing: 0;
+  white-space: nowrap;
+  transform: scaleX(0.62);
+  transform-origin: center;
+}
+.address-opposite-line {
+  font-size: 1em;
+  line-height: 1;
 }
 
 /* ===== 涓诲鍣?===== */
@@ -189,13 +205,13 @@ body {
   grid-template-rows: repeat(2, minmax(132px, auto));
   gap: 0;
   position: relative;
-  background: linear-gradient(145deg, #171b28 0%, #132032 52%, #101820 100%);
-  border: 1px solid rgba(212, 165, 55, 0.32);
+  background: linear-gradient(145deg, #fff8e9 0%, #f5e4bd 52%, #efdcad 100%);
+  border: 1px solid rgba(185, 137, 31, 0.38);
   border-radius: 22px;
   overflow: hidden;
   box-shadow:
-    0 18px 48px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 18px 48px rgba(110, 78, 24, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.66);
 }
 .price-combo-card::before,
 .price-combo-card::after {
@@ -262,7 +278,7 @@ body {
   color: var(--text-primary);
   letter-spacing: 2px;
   margin-bottom: 8px;
-  text-shadow: 0 0 18px rgba(212, 165, 55, 0.24);
+  text-shadow: none;
 }
 .price-label::before {
   content: "";
@@ -273,25 +289,25 @@ body {
   box-shadow: 0 0 16px rgba(212, 165, 55, 0.45);
 }
 .sale-card .price-label {
-  color: #ffe1e1;
+  color: var(--red-price);
 }
 .sale-card .price-label::before {
   background: var(--red-price);
 }
 .buyback-card .price-label {
-  color: #d8ffed;
+  color: var(--green-down);
 }
 .buyback-card .price-label::before {
   background: var(--green-down);
 }
 .silver-sale-card .price-label {
-  color: #ffe1e1;
+  color: var(--red-price);
 }
 .silver-sale-card .price-label::before {
   background: var(--red-price);
 }
 .silver-buyback-card .price-label {
-  color: #d8ffed;
+  color: var(--green-down);
 }
 .silver-buyback-card .price-label::before {
   background: var(--green-down);
@@ -371,8 +387,8 @@ body {
   margin: 16px auto 0;
   border: 1px solid rgba(212, 165, 55, 0.28);
   border-radius: 14px;
-  background: rgba(17, 21, 32, 0.84);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+  background: rgba(255, 249, 236, 0.86);
+  box-shadow: 0 18px 48px rgba(110, 78, 24, 0.14);
   overflow: hidden;
 }
 .certificate-track {
@@ -400,7 +416,7 @@ body {
   padding: 14px 18px;
   border: 1px solid rgba(212, 165, 55, 0.26);
   border-radius: 10px;
-  background: rgba(212, 165, 55, 0.08);
+  background: rgba(185, 137, 31, 0.12);
   color: var(--gold-light);
   font-size: 18px;
   font-weight: 700;
@@ -799,9 +815,10 @@ body {
   .header-address {
     grid-area: address;
     justify-self: center;
-    color: #fff;
+    color: #3b2a14;
     max-width: 100%;
-    font-size: clamp(30px, 4.8vw, 45px);
+    width: 100%;
+    font-size: clamp(45px, 7.2vw, 64px);
     line-height: 1.05;
     transform: none;
     opacity: 0.9;
@@ -855,7 +872,7 @@ body {
     padding: clamp(12px, 1.4vh, 22px) clamp(8px, 1.2vw, 16px);
   }
   .price-label {
-    font-size: clamp(30px, 5.4vw, 48px);
+    font-size: clamp(34px, 6.4vw, 52px);
     margin-bottom: clamp(6px, 0.95vh, 14px);
   }
   .price-label::before {
@@ -863,17 +880,23 @@ body {
     height: clamp(30px, 3.8vw, 44px);
   }
   .price-value {
-    font-size: clamp(60px, 11.6vw, 86px);
+    font-size: clamp(78px, 15vw, 112px);
     letter-spacing: 0;
   }
   .price-unit {
-    font-size: clamp(16px, 2.9vw, 22px);
+    font-size: clamp(18px, 3vw, 24px);
+  }
+  .price-value-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    line-height: 1;
   }
   .certificate-carousel {
     flex: 0 1 auto;
     aspect-ratio: auto;
-    height: clamp(224px, 28vh, 574px);
-    max-height: 30vh;
+    height: clamp(150px, 19vh, 360px);
+    max-height: 21vh;
     margin: 0 auto;
   }
   .certificate-slide {
@@ -932,7 +955,7 @@ body {
     font-size: clamp(29px, 4.45vw, 35px);
   }
   .header-address {
-    font-size: clamp(34px, 5.3vw, 42px);
+    font-size: clamp(52px, 7.8vw, 60px);
   }
   .main-container {
     padding: clamp(8px, 0.82vh, 10px) clamp(24px, 4vw, 34px) clamp(10px, 0.95vh, 12px);
@@ -964,7 +987,7 @@ body {
     padding-left: clamp(12px, 1.8vw, 18px);
   }
   .price-label {
-    font-size: clamp(38px, 5.7vw, 44px);
+    font-size: clamp(42px, 6.2vw, 50px);
     margin-bottom: clamp(7px, 0.8vh, 11px);
   }
   .price-label::before {
@@ -972,18 +995,21 @@ body {
     height: clamp(36px, 4.85vw, 44px);
   }
   .price-value-wrap {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
+    line-height: 1;
   }
   .price-value {
-    font-size: clamp(74px, 11.8vw, 90px);
+    font-size: clamp(96px, 15vw, 116px);
     letter-spacing: 0;
   }
   .price-unit {
-    font-size: clamp(18px, 3.2vw, 24px);
+    font-size: clamp(20px, 3.4vw, 26px);
   }
   .certificate-carousel {
-    height: clamp(250px, 25vh, 310px);
-    max-height: 25vh;
+    height: clamp(170px, 18vh, 230px);
+    max-height: 18vh;
     border-radius: 16px;
   }
   .certificate-slide {
