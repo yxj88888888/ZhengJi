@@ -51,8 +51,11 @@ if (portraitStart === -1) {
 }
 const portraitNext = css.indexOf('\n@media', portraitStart + portraitMarker.length);
 const portraitBlock = css.slice(portraitStart, portraitNext === -1 ? css.length : portraitNext);
-if (!/\.price-combo-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)[\s\S]*grid-template-rows:\s*repeat\(2,\s*minmax\(151px,\s*auto\)\)/.test(portraitBlock)) {
-  throw new Error('Portrait signage layout should enlarge the four-grid price area');
+if (!/\.price-hero\s*\{[\s\S]*flex:\s*1\s+1\s+auto[\s\S]*min-height:\s*clamp\(304px,\s*34vh,\s*620px\)[\s\S]*display:\s*flex/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should let the price area fill spare vertical space');
+}
+if (!/\.price-combo-card\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)[\s\S]*grid-template-rows:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(portraitBlock)) {
+  throw new Error('Portrait signage layout should stretch the four-grid price area evenly');
 }
 if (!/\.certificate-carousel\s*\{[\s\S]*flex:\s*0\s+1\s+auto[\s\S]*aspect-ratio:\s*auto[\s\S]*height:\s*clamp\(224px,\s*28vh,\s*574px\)[\s\S]*max-height:\s*30vh/.test(portraitBlock)) {
   throw new Error('Portrait signage layout should shrink certificate display to preserve one-page browsing');
@@ -63,8 +66,8 @@ if (!/\.page-section\.active\s*\{[\s\S]*gap:\s*clamp\(8px,\s*0\.9vh,\s*14px\)[\s
 if (!/\.fixed-price-note\s*\{[\s\S]*min-height:\s*clamp\(52px,\s*6vh,\s*82px\)[\s\S]*font-size:\s*clamp\(18px,\s*2\.75vw,\s*34px\)/.test(portraitBlock)) {
   throw new Error('Portrait bottom note should scale up with its text');
 }
-if (!/\.header-address\s*\{[\s\S]*transform:\s*none/.test(portraitBlock)) {
-  throw new Error('Portrait signage layout should keep the address in normal flow');
+if (!/\.header-address\s*\{[\s\S]*font-size:\s*clamp\(30px,\s*4\.8vw,\s*45px\)[\s\S]*transform:\s*none[\s\S]*white-space:\s*normal/.test(portraitBlock)) {
+  throw new Error('Portrait signage address should enlarge and wrap without overflowing');
 }
 if (!/grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"qr time"[\s\S]*"address address"/.test(portraitBlock)) {
   throw new Error('Portrait signage header should keep QR, logo, and time in a compact layout');
@@ -88,10 +91,10 @@ const tvPortraitBlock = css.slice(tvPortraitStart, tvPortraitNext === -1 ? css.l
 if (!/\.page-section\.active\s*\{[\s\S]*gap:\s*clamp\(9px,\s*0\.9vh,\s*12px\)[\s\S]*justify-content:\s*flex-start/.test(tvPortraitBlock)) {
   throw new Error('70:120 TV layout should start content directly below the header');
 }
-if (!/\.price-combo-card\s*\{[\s\S]*grid-template-rows:\s*repeat\(2,\s*minmax\(184px,\s*auto\)\)[\s\S]*border-width:\s*2px/.test(tvPortraitBlock)) {
-  throw new Error('70:120 TV layout should enlarge the four price grid');
+if (!/\.price-combo-card\s*\{[\s\S]*grid-template-rows:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)[\s\S]*border-width:\s*2px/.test(tvPortraitBlock)) {
+  throw new Error('70:120 TV layout should stretch the four price grid');
 }
-if (!/\.certificate-carousel\s*\{[\s\S]*height:\s*clamp\(310px,\s*29\.5vh,\s*354px\)[\s\S]*max-height:\s*29\.5vh/.test(tvPortraitBlock)) {
+if (!/\.certificate-carousel\s*\{[\s\S]*height:\s*clamp\(250px,\s*25vh,\s*310px\)[\s\S]*max-height:\s*25vh/.test(tvPortraitBlock)) {
   throw new Error('70:120 TV layout should keep the certificate carousel compact');
 }
 if (!/\.header-qr-img\s*\{[\s\S]*width:\s*clamp\(150px,\s*13\.8vh,\s*166px\)[\s\S]*height:\s*clamp\(150px,\s*13\.8vh,\s*166px\)/.test(tvPortraitBlock)) {
@@ -99,6 +102,10 @@ if (!/\.header-qr-img\s*\{[\s\S]*width:\s*clamp\(150px,\s*13\.8vh,\s*166px\)[\s\
 }
 if (!/\.fixed-price-note\s*\{[\s\S]*min-height:\s*clamp\(58px,\s*5\.9vh,\s*72px\)[\s\S]*font-size:\s*clamp\(20px,\s*3\.2vw,\s*25px\)/.test(tvPortraitBlock)) {
   throw new Error('70:120 TV bottom note should remain readable within one page');
+}
+if (!/\.header-address\s*\{[\s\S]*font-size:\s*clamp\(34px,\s*5\.3vw,\s*42px\)/.test(tvPortraitBlock) ||
+    !/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(74px,\s*11\.8vw,\s*90px\)/.test(tvPortraitBlock)) {
+  throw new Error('70:120 TV layout should enlarge address and price text with safe maximums');
 }
 
 const noteRule = ruleFor('.fixed-price-note');

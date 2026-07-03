@@ -57,13 +57,14 @@ const portraitMarker = '@media (orientation: portrait) and (min-width: 520px) an
 const portraitStart = css.indexOf(portraitMarker);
 const portraitNext = css.indexOf('\n@media', portraitStart + portraitMarker.length);
 const portraitBlock = css.slice(portraitStart, portraitNext === -1 ? css.length : portraitNext);
-if (!/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(42px,\s*8\.4vw,\s*68px\)/.test(portraitBlock) ||
-    !/\.price-unit\s*\{[\s\S]*font-size:\s*clamp\(14px,\s*2\.55vw,\s*20px\)/.test(portraitBlock) ||
-    !/\.price-label\s*\{[\s\S]*font-size:\s*clamp\(23px,\s*3\.85vw,\s*34px\)/.test(portraitBlock)) {
+if (!/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(60px,\s*11\.6vw,\s*86px\)/.test(portraitBlock) ||
+    !/\.price-unit\s*\{[\s\S]*font-size:\s*clamp\(16px,\s*2\.9vw,\s*22px\)/.test(portraitBlock) ||
+    !/\.price-label\s*\{[\s\S]*font-size:\s*clamp\(30px,\s*5\.4vw,\s*48px\)/.test(portraitBlock)) {
   throw new Error('Portrait price text and units should fit fully inside the left grid cells');
 }
-if (!/grid-template-rows:\s*repeat\(2,\s*minmax\(151px,\s*auto\)\)/.test(portraitBlock)) {
-  throw new Error('Portrait price grid should be enlarged by about 30 percent');
+if (!/\.price-hero\s*\{[\s\S]*flex:\s*1\s+1\s+auto/.test(portraitBlock) ||
+    !/grid-template-rows:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(portraitBlock)) {
+  throw new Error('Portrait price grid should expand to fill spare screen space');
 }
 
 console.log('price panel uses a gold-divided four-grid layout with silver prices');
