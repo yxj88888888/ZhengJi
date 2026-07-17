@@ -90,6 +90,9 @@ if (!/\.header-qr-card\s*\{[\s\S]*flex-direction:\s*column[\s\S]*justify-content
 if (!/\.header-qr-img\s*\{[\s\S]*width:\s*clamp\(104px,\s*13vh,\s*156px\)/.test(portraitBlock)) {
   throw new Error('Portrait QR image should scale up to meet the price panel');
 }
+if (!/\.header-qr-card\s*\{[\s\S]*width:\s*clamp\(176px,\s*26\.5vw,\s*210px\)/.test(portraitBlock)) {
+  throw new Error('Portrait QR card should leave room for the enlarged brand mark');
+}
 
 const tinyMarker = '@media (max-width: 480px)';
 const tinyStart = css.indexOf(tinyMarker);

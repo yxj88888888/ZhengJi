@@ -6,6 +6,8 @@
   --gold-primary: #b9891f;
   --gold-light: #8f6817;
   --red-price: #ff4d4f;
+  --brand-red: #d8272d;
+  --brand-border: #ffbb00;
   --red-up: #e8393a;
   --green-down: #26a65b;
   --text-primary: #352615;
@@ -112,13 +114,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(10px, 1.8vw, 24px);
+  gap: clamp(14px, 2.2vw, 28px);
 }
 .logo-circle {
-  width: clamp(58px, 7vw, 90px); height: clamp(58px, 7vw, 90px);
+  width: clamp(70px, 8.5vw, 116px); height: clamp(70px, 8.5vw, 116px);
   border-radius: 50%; overflow: hidden;
-  border: 3px solid var(--gold-primary);
-  box-shadow: 0 0 36px rgba(212, 165, 55, 0.35);
+  border: 4px solid var(--brand-border);
+  box-shadow: 0 0 36px rgba(255, 187, 0, 0.26);
   flex-shrink: 0; background: #fff;
 }
 .logo-img { width: 100%; height: 100%; object-fit: contain; }
@@ -129,10 +131,11 @@ body {
   color: #fff; font-weight: bold; font-size: 30px; line-height: 1.3;
 }
 .logo-title {
-  font-size: clamp(36px, 4vw, 52px);
+  font-size: clamp(44px, 5.2vw, 68px);
   font-weight: 800;
-  color: var(--gold-primary);
+  color: var(--brand-red);
   letter-spacing: clamp(1px, 0.24vw, 3px);
+  line-height: 0.96;
   white-space: nowrap;
 }
 .header-time {
@@ -751,7 +754,7 @@ body {
   }
   .header-inner {
     max-width: 100%;
-    grid-template-columns: minmax(196px, 0.56fr) minmax(0, 1fr);
+    grid-template-columns: minmax(176px, 26.5vw) minmax(0, 1fr);
     grid-template-areas:
       "qr logo"
       "qr time"
@@ -764,7 +767,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    width: clamp(196px, 34vw, 260px);
+    width: clamp(176px, 26.5vw, 210px);
     min-height: clamp(222px, 24vh, 280px);
     padding: clamp(8px, 0.8vh, 12px) clamp(9px, 1.1vw, 14px);
     gap: clamp(5px, 0.55vh, 9px);
@@ -794,16 +797,17 @@ body {
   .logo-section {
     grid-area: logo;
     justify-self: center;
-    align-self: end;
-    transform: translateY(clamp(8px, 1.05vh, 14px));
-    gap: clamp(12px, 1.8vw, 24px);
+    align-self: center;
+    min-height: clamp(140px, 15.65vh, 165px);
+    transform: none;
+    gap: clamp(14px, 3.4vw, 22px);
   }
   .logo-circle {
-    width: clamp(92px, 10.5vh, 132px);
-    height: clamp(92px, 10.5vh, 132px);
+    width: clamp(104px, 14.9vh, 160px);
+    height: clamp(104px, 14.9vh, 160px);
   }
   .logo-title {
-    font-size: clamp(48px, 7.8vw, 76px);
+    font-size: clamp(52px, 10.8vw, 94px);
     letter-spacing: clamp(1px, 0.18vw, 2px);
   }
   .header-time {
@@ -920,6 +924,19 @@ body {
   }
 }
 
+@media (orientation: portrait) and (min-width: 520px) and (max-width: 560px) and (max-aspect-ratio: 3/4) {
+  .logo-section {
+    gap: clamp(10px, 2.4vw, 14px);
+  }
+  .logo-circle {
+    width: clamp(104px, 14vh, 112px);
+    height: clamp(104px, 14vh, 112px);
+  }
+  .logo-title {
+    font-size: clamp(52px, 10.2vw, 56px);
+  }
+}
+
 @media (orientation: portrait) and (min-width: 650px) and (max-width: 760px) and (min-height: 1040px) and (max-aspect-ratio: 0.68) {
   .header-bar {
     padding: clamp(8px, 0.75vh, 10px) clamp(22px, 4vw, 34px) clamp(6px, 0.65vh, 9px);
@@ -944,14 +961,18 @@ body {
     line-height: 1.05;
   }
   .logo-section {
-    transform: translateY(clamp(6px, 0.65vh, 9px));
+    align-self: center;
+    min-height: clamp(142px, 13.5vh, 158px);
+    transform: none;
+    gap: clamp(14px, 2.4vw, 20px);
   }
   .logo-circle {
-    width: clamp(104px, 10vh, 120px);
-    height: clamp(104px, 10vh, 120px);
+    width: clamp(128px, 12.2vh, 144px);
+    height: clamp(128px, 12.2vh, 144px);
   }
   .logo-title {
-    font-size: clamp(58px, 8.8vw, 68px);
+    font-size: clamp(76px, 11.2vw, 86px);
+    line-height: 0.95;
   }
   .header-time {
     padding: clamp(5px, 0.52vh, 7px) clamp(14px, 2.35vw, 20px);

@@ -79,10 +79,11 @@ if (!/\.header-address\s*\{[\s\S]*color:\s*#3b2a14[\s\S]*font-size:\s*clamp\(45p
 if (!/grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"qr time"[\s\S]*"address address"/.test(portraitBlock)) {
   throw new Error('Portrait signage header should keep QR, logo, and time in a compact layout');
 }
-if (!/\.logo-section\s*\{[\s\S]*align-self:\s*end[\s\S]*transform:\s*translateY\(clamp\(8px,\s*1\.05vh,\s*14px\)\)/.test(portraitBlock) ||
-    !/\.logo-circle\s*\{[\s\S]*width:\s*clamp\(92px,\s*10\.5vh,\s*132px\)/.test(portraitBlock) ||
-    !/\.logo-title\s*\{[\s\S]*font-size:\s*clamp\(48px,\s*7\.8vw,\s*76px\)/.test(portraitBlock)) {
-  throw new Error('Portrait signage logo should scale up and sit close to the date row');
+if (!/\.header-inner\s*\{[\s\S]*grid-template-columns:\s*minmax\(176px,\s*26\.5vw\)\s+minmax\(0,\s*1fr\)/.test(portraitBlock) ||
+    !/\.logo-section\s*\{[\s\S]*align-self:\s*center[\s\S]*min-height:\s*clamp\(140px,\s*15\.65vh,\s*165px\)[\s\S]*transform:\s*none/.test(portraitBlock) ||
+    !/\.logo-circle\s*\{[\s\S]*width:\s*clamp\(104px,\s*14\.9vh,\s*160px\)/.test(portraitBlock) ||
+    !/\.logo-title\s*\{[\s\S]*font-size:\s*clamp\(52px,\s*10\.8vw,\s*94px\)/.test(portraitBlock)) {
+  throw new Error('Portrait signage logo should expand into the upper header space without crowding the time row');
 }
 if (!/\.admin-entry-link\s*\{[\s\S]*top:\s*clamp\(70px,\s*8vh,\s*105px\)[\s\S]*bottom:\s*auto/.test(portraitBlock)) {
   throw new Error('Portrait signage layout should keep the admin entry clear of market content');
@@ -114,6 +115,27 @@ if (!/\.header-address\s*\{[\s\S]*font-size:\s*clamp\(52px,\s*7\.8vw,\s*60px\)/.
     !/\.price-value\s*\{[\s\S]*font-size:\s*clamp\(144px,\s*22\.5vw,\s*174px\)[\s\S]*transform:\s*scaleX\(0\.5\)/.test(tvPortraitBlock) ||
     !/\.price-value-wrap\s*\{[\s\S]*flex-direction:\s*column/.test(tvPortraitBlock)) {
   throw new Error('70:120 TV layout should enlarge address and price text with safe maximums');
+}
+
+if (!/--brand-border:\s*#ffbb00/.test(css) ||
+    !/\.logo-circle\s*\{[\s\S]*border:\s*4px\s+solid\s+var\(--brand-border\)/.test(css) ||
+    !/\.logo-title\s*\{[\s\S]*font-size:\s*clamp\(44px,\s*5\.2vw,\s*68px\)[\s\S]*color:\s*var\(--brand-red\)/.test(css) ||
+    !/\.logo-section\s*\{[\s\S]*align-self:\s*center[\s\S]*min-height:\s*clamp\(142px,\s*13\.5vh,\s*158px\)[\s\S]*transform:\s*none/.test(tvPortraitBlock) ||
+    !/\.logo-circle\s*\{[\s\S]*width:\s*clamp\(128px,\s*12\.2vh,\s*144px\)/.test(tvPortraitBlock) ||
+    !/\.logo-title\s*\{[\s\S]*font-size:\s*clamp\(76px,\s*11\.2vw,\s*86px\)/.test(tvPortraitBlock)) {
+  throw new Error('70:120 TV layout should use the upper header space for an enlarged red brand mark');
+}
+
+const narrowPortraitMarker = '@media (orientation: portrait) and (min-width: 520px) and (max-width: 560px) and (max-aspect-ratio: 3/4)';
+const narrowPortraitStart = css.indexOf(narrowPortraitMarker);
+if (narrowPortraitStart === -1) {
+  throw new Error('Expected a narrow portrait guard for the enlarged brand mark');
+}
+const narrowPortraitNext = css.indexOf('\n@media', narrowPortraitStart + narrowPortraitMarker.length);
+const narrowPortraitBlock = css.slice(narrowPortraitStart, narrowPortraitNext === -1 ? css.length : narrowPortraitNext);
+if (!/\.logo-circle\s*\{[\s\S]*width:\s*clamp\(104px,\s*14vh,\s*112px\)/.test(narrowPortraitBlock) ||
+    !/\.logo-title\s*\{[\s\S]*font-size:\s*clamp\(52px,\s*10\.2vw,\s*56px\)/.test(narrowPortraitBlock)) {
+  throw new Error('Narrow portrait guard should keep the enlarged brand mark inside the header');
 }
 
 const noteRule = ruleFor('.fixed-price-note');
