@@ -941,7 +941,7 @@ body {
   .header-inner {
     grid-template-areas:
       "qr logo"
-      "time time"
+      "qr time"
       "address address";
   }
   .header-qr-card {
@@ -957,13 +957,16 @@ body {
   }
   .header-time {
     justify-self: center;
-    width: min(100%, 581px);
-    height: clamp(48px, 5.49vh, 54px);
-    padding: 0 clamp(14px, 2.2vw, 24px);
+    align-self: start;
+    width: fit-content;
+    max-width: 100%;
+    padding: 0;
     border: 0;
-    border-radius: 1119px;
-    font-size: clamp(28px, 4.55vw, 38px);
-    line-height: 1;
+    border-radius: 1000px;
+    background: transparent;
+    box-shadow: none;
+    font-size: clamp(30px, 5vw, 33.28px);
+    line-height: 1.05;
   }
 }
 

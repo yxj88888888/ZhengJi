@@ -15,8 +15,8 @@ if (!/now\.getMonth\(\)\s*\+\s*1\)\s*\+\s*'月'/.test(formatter[1])) {
 }
 
 const headerTime = css.match(/\.header-time\s*\{([^}]*)\}/);
-if (!headerTime || !/font-size\s*:\s*30px/.test(headerTime[1])) {
-  throw new Error('Header date-time should use a 1.5x 30px desktop font');
+if (!headerTime || !/font-size\s*:\s*clamp\(24px,\s*3\.1vw,\s*40px\)/.test(headerTime[1])) {
+  throw new Error('Header date-time should use the responsive desktop type scale');
 }
 if (!/text-align\s*:\s*center/.test(headerTime[1]) ||
     !/align-self\s*:\s*center/.test(headerTime[1])) {
@@ -28,9 +28,9 @@ const wideTimeStart = css.indexOf(wideTimeMarker);
 if (wideTimeStart === -1) throw new Error('Missing wide portrait date-time rule');
 const wideTimeNext = css.indexOf('\n@media', wideTimeStart + wideTimeMarker.length);
 const wideTimeBlock = css.slice(wideTimeStart, wideTimeNext === -1 ? css.length : wideTimeNext);
-if (!/grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"time time"[\s\S]*"address address"/.test(wideTimeBlock) ||
-    !/\.header-time\s*\{[\s\S]*width:\s*min\(100%,\s*581px\)[\s\S]*height:\s*clamp\(48px,\s*5\.49vh,\s*54px\)[\s\S]*border:\s*0[\s\S]*border-radius:\s*1119px[\s\S]*font-size:\s*clamp\(28px,\s*4\.55vw,\s*38px\)/.test(wideTimeBlock)) {
-  throw new Error('Wide portrait date-time should span the header with the requested larger type');
+if (!/grid-template-areas:\s*[\s\S]*"qr logo"[\s\S]*"qr time"[\s\S]*"address address"/.test(wideTimeBlock) ||
+    !/\.header-time\s*\{[\s\S]*justify-self:\s*center[\s\S]*align-self:\s*start[\s\S]*width:\s*fit-content[\s\S]*max-width:\s*100%[\s\S]*padding:\s*0[\s\S]*border:\s*0[\s\S]*border-radius:\s*1000px[\s\S]*background:\s*transparent[\s\S]*font-size:\s*clamp\(30px,\s*5vw,\s*33\.28px\)/.test(wideTimeBlock)) {
+  throw new Error('Wide portrait date-time should sit directly below the logo at its intrinsic width');
 }
 
 console.log('header date-time omits year and stays enlarged below the centered logo');
