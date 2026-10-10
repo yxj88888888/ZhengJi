@@ -18,7 +18,6 @@ ZHENGJI_DEFAULT_SALE_PRICE=1130
 ZHENGJI_DEFAULT_BUYBACK_PRICE=1026.5
 ```
 
-如果未配置账号密码，后台默认账号为 `admin`，默认密码为 `zhengji2026`。正式上线前建议改成自己的账号密码。
 
 ## 访问地址
 
