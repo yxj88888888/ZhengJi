@@ -13,7 +13,6 @@ body.promo-visible > .admin-entry-link {
 }
 
 .fullscreen-promo {
-  --promo-band-height: max(0px, calc((100dvh - 100vw) / 2));
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -40,14 +39,13 @@ body.promo-visible > .admin-entry-link {
   position: absolute;
   left: 0;
   right: 0;
-  height: var(--promo-band-height);
   display: none;
   align-items: center;
   justify-content: center;
 }
 
 .promo-brand {
-  top: 0;
+  top: 2vh;
   flex-direction: column;
   gap: clamp(2px, .6vh, 8px);
 }
@@ -64,14 +62,16 @@ body.promo-visible > .admin-entry-link {
 
 .promo-brand-address {
   color: #795022;
-  font-size: clamp(14px, 3.8vw, 26px);
+  font-size: clamp(28px, 7.6vw, 52px);
   font-weight: 600;
-  line-height: 1.2;
+  letter-spacing: -.04em;
+  line-height: 1;
   white-space: nowrap;
+  text-align: center;
 }
 
 .promo-qrs {
-  bottom: 0;
+  bottom: 1vh;
   gap: clamp(20px, 8vw, 64px);
 }
 
@@ -88,8 +88,8 @@ body.promo-visible > .admin-entry-link {
 
 .promo-qr-frame {
   position: relative;
-  width: min(29vw, calc(var(--promo-band-height) - 34px));
-  aspect-ratio: 1;
+  width: 22vw;
+  height: 22vw;
   overflow: hidden;
   border: 2px solid #ad8135;
   border-radius: 8px;
@@ -112,6 +112,11 @@ body.promo-visible > .admin-entry-link {
 }
 
 @media (orientation: portrait) and (max-aspect-ratio: 4/5) {
+  .fullscreen-promo-image {
+    width: 95%;
+    transform: translateY(4vh);
+  }
+
   .promo-brand,
   .promo-qrs {
     display: flex;
